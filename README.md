@@ -2,7 +2,9 @@
 
 A complete, production-ready e-commerce platform built with the MERN stack (MongoDB, Express, React, Node.js). Features include user authentication, product management, shopping cart, and order processing with role-based admin panel.
 
-**Live Demo:** [Coming Soon - Docker/Deployment Setup]
+**Live Demo:** [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
+
+**Live API:** [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com)
 
 ---
 
@@ -13,6 +15,29 @@ A complete, production-ready e-commerce platform built with the MERN stack (Mong
 - **Role-Based Access**: Admin panel with restricted product & order management
 - **Persistent Cart**: Client-side cart with localStorage integration
 - **Production-Ready**: Input validation, error handling, and security best practices
+- **Live Deployment**: Frontend deployed on Vercel and backend deployed on Render
+
+---
+
+## **Live Deployment**
+
+| Service | Platform | URL |
+|---------|----------|-----|
+| Frontend | Vercel | [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app) |
+| Backend API | Render | [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com) |
+| Health Check | Render | [https://cartify-backend-lg8z.onrender.com/health](https://cartify-backend-lg8z.onrender.com/health) |
+
+The deployed frontend uses the Render API through:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+```
+
+The deployed backend allows the Vercel frontend through:
+
+```env
+CLIENT_URL=https://cartify-frontend-rouge.vercel.app
+```
 
 ---
 
@@ -90,10 +115,11 @@ A complete, production-ready e-commerce platform built with the MERN stack (Mong
 - **Authentication:** JWT (JSON Web Tokens)
 - **Password:** bcryptjs
 
-### **DevOps** (Coming Soon)
-- Docker & Docker Compose
-- GitHub Actions CI/CD
-- AWS deployment (EC2, S3, CloudWatch)
+### **Deployment**
+- **Frontend Hosting:** Vercel
+- **Backend Hosting:** Render
+- **Database:** MongoDB Atlas or compatible MongoDB connection
+- **Future DevOps:** Docker, GitHub Actions CI/CD, AWS deployment guide
 
 ---
 
@@ -175,6 +201,8 @@ JWT_SECRET=your_jwt_secret_key_here
 JWT_EXPIRE=1d
 NODE_ENV=development
 PORT=5000
+API_BASE_URL=http://localhost:5000
+CLIENT_URL=http://localhost:3000
 ```
 
 Create `client/.env.local`:
@@ -203,6 +231,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 📚 **API Documentation**
 
 ### **Base URL**
+Production:
+```
+https://cartify-backend-lg8z.onrender.com/api
+```
+
+Local:
 ```
 http://localhost:5000/api
 ```
@@ -361,15 +395,35 @@ Authorization: Bearer <token>
 ## 📝 **Environment Variables**
 
 ### **Server (.env)**
+Production on Render:
+```env
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_secret_key_here
+JWT_EXPIRE=1d
+NODE_ENV=production
+PORT=5000
+API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+CLIENT_URL=https://cartify-frontend-rouge.vercel.app
+```
+
+Local development:
 ```env
 MONGO_URI=mongodb://localhost:27017/ecommerce
 JWT_SECRET=your_secret_key_here
 JWT_EXPIRE=1d
 NODE_ENV=development
 PORT=5000
+API_BASE_URL=http://localhost:5000
+CLIENT_URL=http://localhost:3000
 ```
 
 ### **Client (.env.local)**
+Production on Vercel:
+```env
+NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+```
+
+Local development:
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
@@ -416,4 +470,4 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-**Last Updated:** May 30, 2026
+**Last Updated:** May 31, 2026

@@ -2,6 +2,18 @@
 
 The frontend client for the Cartify platform, built with **Next.js 16**, **React 19**, and **Zustand** state management. Provides a complete user interface for browsing products, managing shopping cart, and processing orders.
 
+## **Live Deployment**
+
+- **Frontend:** [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
+- **Backend API:** [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com)
+- **Health Check:** [https://cartify-backend-lg8z.onrender.com/health](https://cartify-backend-lg8z.onrender.com/health)
+
+Vercel environment variable:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+```
+
 ---
 
 ## ✨ **Features**
@@ -61,7 +73,7 @@ The frontend client for the Cartify platform, built with **Next.js 16**, **React
 ### **Prerequisites**
 - Node.js 18+
 - npm or yarn
-- Backend API running on port 5000
+- Backend API running locally on port 5000, or the live Render API
 
 ### **Installation**
 
@@ -71,9 +83,14 @@ npm install
 ```
 
 2. **Set up environment variables**
-Create `.env.local` file:
+Create `.env.local` file for local development:
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+```
+
+For Vercel production, set:
+```env
+NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
 ### **Running Locally**
@@ -83,6 +100,8 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 npm run dev
 ```
 Opens [http://localhost:3000](http://localhost:3000)
+
+Production site: [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
 
 **Production Build:**
 ```bash
@@ -134,7 +153,7 @@ npm run lint
          │ Axios HTTP Requests
          ▼
 ┌────────────────────────────────────────────┐
-│  Express API Server (Port 5000)            │
+│  Express API Server (Render / Port 5000)   │
 │  (See Server README for details)            │
 └────────────────────────────────────────────┘
 ```
@@ -212,6 +231,29 @@ npm run lint     # Run ESLint
 
 ---
 
+## **Deployment**
+
+This app is deployed on Vercel from the `client` directory.
+
+Recommended Vercel settings:
+
+```text
+Root Directory: client
+Build Command: npm run build
+Install Command: npm install
+Output Directory: .next
+```
+
+Required environment variable:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+```
+
+After changing this variable in Vercel, redeploy the frontend.
+
+---
+
 ## 🎯 **Future Improvements**
 
 - [ ] Migrate to Tailwind CSS
@@ -225,4 +267,4 @@ npm run lint     # Run ESLint
 
 ---
 
-**Last Updated:** May 30, 2026
+**Last Updated:** May 31, 2026

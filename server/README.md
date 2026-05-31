@@ -2,6 +2,26 @@
 
 The REST API backend for the Cartify platform, built with **Node.js**, **Express**, and **MongoDB**. Handles authentication, product management, orders, and inventory management.
 
+## **Live Deployment**
+
+- **Backend API:** [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com)
+- **Health Check:** [https://cartify-backend-lg8z.onrender.com/health](https://cartify-backend-lg8z.onrender.com/health)
+- **Frontend Client:** [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
+
+Render environment variables:
+
+```env
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_super_secret_jwt_key_here_min_32_chars
+JWT_EXPIRE=1d
+NODE_ENV=production
+PORT=5000
+API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+CLIENT_URL=https://cartify-frontend-rouge.vercel.app
+```
+
+The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the Render backend.
+
 ---
 
 ## ✨ **Features**
@@ -191,6 +211,17 @@ API_BASE_URL=http://localhost:5000
 CLIENT_URL=http://localhost:3000
 ```
 
+For Render production, use:
+```env
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_super_secret_jwt_key_here_min_32_chars
+JWT_EXPIRE=1d
+NODE_ENV=production
+PORT=5000
+API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+CLIENT_URL=https://cartify-frontend-rouge.vercel.app
+```
+
 3. **Start MongoDB**
 ```bash
 mongod
@@ -198,12 +229,7 @@ mongod
 
 ### **Running the Server**
 
-**Development Mode (with auto-reload):**
-```bash
-npm run dev
-```
-
-**Production Mode:**
+**Start the server:**
 ```bash
 npm start
 ```
@@ -213,11 +239,22 @@ npm start
 curl http://localhost:5000/health
 ```
 
+Live health check:
+```bash
+curl https://cartify-backend-lg8z.onrender.com/health
+```
+
 ---
 
 ## 📚 **API Endpoints**
 
 ### **Base URL**
+Production:
+```
+https://cartify-backend-lg8z.onrender.com/api
+```
+
+Local:
 ```
 http://localhost:5000/api
 ```
@@ -443,7 +480,6 @@ npm run seed
 
 ```bash
 npm start              # Start production server
-npm run dev            # Start with nodemon (auto-reload)
 npm run seed           # Seed database with sample products
 ```
 
@@ -464,4 +500,4 @@ npm run seed           # Seed database with sample products
 
 ---
 
-**Last Updated:** May 30, 2026
+**Last Updated:** May 31, 2026
