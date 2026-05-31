@@ -1,0 +1,357 @@
+.page {
+  min-height: calc(100vh - 78px);
+  padding: 56px 24px 80px;
+  color: var(--foreground);
+}
+
+.empty {
+  display: grid;
+  gap: 20px;
+  padding: 80px 40px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+.emptyTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.emptyText {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.emptyButton {
+  align-self: center;
+  margin-top: 12px;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.emptyButton:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+}
+
+.shell {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--foreground);
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.clearButton {
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 10px 18px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    color var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.clearButton:hover {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
+}
+
+.item:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-soft);
+  transform: translateY(-2px);
+}
+
+.itemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemTitle {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.itemMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.itemPrice {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary-soft);
+  border-radius: var(--radius-full);
+  padding: 6px;
+}
+
+.quantityButton {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition),
+    transform var(--transition);
+}
+
+.quantityButton:hover {
+  background: var(--primary-dark);
+  transform: scale(1.05);
+}
+
+.quantity {
+  min-width: 32px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.removeButton {
+  padding: 8px 14px;
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.removeButton:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.summary {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid var(--border);
+}
+
+.summaryText {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.summaryPrice {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.checkoutButton {
+  padding: 12px 28px;
+  background: var(--success);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.checkoutButton:hover {
+  background: #059669;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 40px 16px 60px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .summary {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .empty {
+    padding: 60px 20px;
+  }
+}
+
+.controlButton {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: var(--border);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.controlButton:hover {
+  background: #e2e8f0;
+}
+
+.summary {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.summaryLink {
+  color: #ffffff;
+  background: var(--primary);
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+}
+
+.summaryLink:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 720px) {
+  .item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .summary {
+    justify-content: stretch;
+  }
+}

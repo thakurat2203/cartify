@@ -1,0 +1,147 @@
+.page {
+  max-width: 900px;
+  margin: 56px auto;
+  padding: 0 24px 40px;
+  color: var(--foreground);
+}
+
+.shell {
+  display: grid;
+  gap: 20px;
+}
+
+.backRow {
+  margin-bottom: 12px;
+}
+
+.backLink {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.title,
+.sectionTitle,
+.label,
+.itemName {
+  color: var(--foreground);
+}
+
+.message,
+.value {
+  color: var(--muted);
+}
+
+.badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-placed {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.status-processing {
+  background: rgba(168, 85, 247, 0.1);
+  color: #a855f7;
+}
+
+.status-shipped {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.status-delivered {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.status-cancelled {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 24px;
+}
+
+.section {
+  display: grid;
+  gap: 14px;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+}
+
+.row {
+  display: grid;
+  gap: 6px;
+}
+
+.items {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.item {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  display: grid;
+  gap: 8px;
+}
+
+.statusControls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.select {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--foreground);
+}
+
+.submitButton {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: var(--primary);
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitButton:hover {
+  background: #1d4ed8;
+}
+
+.submitButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (min-width: 640px) {
+  .row {
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+}

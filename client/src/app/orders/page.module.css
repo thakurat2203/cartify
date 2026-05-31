@@ -1,0 +1,82 @@
+.page {
+  max-width: 980px;
+  margin: 56px auto;
+  padding: 0 24px 60px;
+  color: var(--foreground);
+}
+
+.shell {
+  display: grid;
+  gap: 22px;
+}
+
+.backRow {
+  margin-bottom: 8px;
+}
+
+.backLink {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.title {
+  color: var(--foreground);
+}
+
+.message,
+.value {
+  color: var(--muted);
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+  margin: 0;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 16px;
+}
+
+.row {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  color: var(--foreground);
+}
+
+.detailsLink {
+  width: fit-content;
+  margin-top: 6px;
+  color: #ffffff;
+  background: var(--primary);
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+}
+
+.detailsLink:hover {
+  background: #1d4ed8;
+}
+
+@media (min-width: 640px) {
+  .row {
+    grid-template-columns: 140px 1fr;
+    align-items: start;
+    gap: 12px;
+  }
+}

@@ -1,0 +1,72 @@
+.page {
+  max-width: 760px;
+  margin: 56px auto;
+  padding: 0 24px 40px;
+}
+
+.shell {
+  display: grid;
+  gap: 20px;
+}
+
+.backRow {
+  margin-bottom: 12px;
+}
+
+.backLink {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.title {
+  color: var(--foreground);
+}
+
+.subtitle,
+.message {
+  color: var(--muted);
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--foreground);
+}
+
+.submitButton {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 18px;
+  background: var(--primary);
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitButton:hover {
+  background: #1d4ed8;
+}
+
+.submitButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
