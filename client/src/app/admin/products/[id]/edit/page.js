@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
+
 import axios from "axios";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
@@ -11,6 +13,7 @@ import {
   validateStock,
   validateCategory,
   validateDescription,
+  validateImageUrl,
 } from "@/utils/validation";
 import styles from "./page.module.css";
 
@@ -22,20 +25,23 @@ export default function EditProductPage({ params }) {
   const { user, token, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // State for the product being edited
   const [form, setForm] = useState({
     name: "",
     price: "",
     description: "",
     category: "",
     stock: "",
+    image: "",
   });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
+  const imagePreviewUrl = form.image.trim();
+  const imagePreviewLetter = form.name.trim().charAt(0).toUpperCase() || "?";
 
-  // Authenticate admin and fetch product data
   useEffect(() => {
+    // Admin screens must wait for auth hydration before enforcing role access.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
@@ -46,7 +52,6 @@ export default function EditProductPage({ params }) {
       return;
     }
 
-    // Load product details for editing
     const loadProduct = async () => {
       try {
         const response = await axios.get(`${API_BASE}/api/products/${id}`);
@@ -58,7 +63,9 @@ export default function EditProductPage({ params }) {
           description: product.description || "",
           category: product.category || "",
           stock: product.stock ?? "",
+          image: product.image || "",
         });
+        setImagePreviewFailed(false);
       } catch (err) {
         const apiMessage =
           err.response?.data?.message ||
@@ -75,19 +82,22 @@ export default function EditProductPage({ params }) {
     }
   }, [authLoading, id, isAuthenticated, router, user]);
 
-  // Handle changes for all form fields
   const handleChange = (e) => {
+    if (e.target.name === "image") {
+      // A changed URL deserves a fresh preview attempt after a previous load error.
+      setImagePreviewFailed(false);
+    }
+
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
 
-  // Validate and submit product updates
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Perform client-side validation
+    // Client validation mirrors backend product rules before the admin submits.
     if (form.name) {
       const nameValidation = validateProductName(form.name);
       if (!nameValidation.valid) {
@@ -96,7 +106,6 @@ export default function EditProductPage({ params }) {
       }
     }
 
-    // Validate price if provided
     if (form.price) {
       const priceValidation = validatePrice(form.price);
       if (!priceValidation.valid) {
@@ -105,7 +114,6 @@ export default function EditProductPage({ params }) {
       }
     }
 
-    // Validate category if provided
     if (form.category) {
       const categoryValidation = validateCategory(form.category);
       if (!categoryValidation.valid) {
@@ -114,7 +122,6 @@ export default function EditProductPage({ params }) {
       }
     }
 
-    // Validate stock if provided
     if (form.stock !== "") {
       const stockValidation = validateStock(form.stock);
       if (!stockValidation.valid) {
@@ -123,7 +130,6 @@ export default function EditProductPage({ params }) {
       }
     }
 
-    // Validate description if provided
     if (form.description) {
       const descriptionValidation = validateDescription(form.description);
       if (!descriptionValidation.valid) {
@@ -132,11 +138,16 @@ export default function EditProductPage({ params }) {
       }
     }
 
+    const imageValidation = validateImageUrl(form.image);
+    if (!imageValidation.valid) {
+      setMessage(imageValidation.error);
+      return;
+    }
+
     try {
       setSubmitting(true);
       setMessage("");
 
-      // Update the product record in the database
       await axios.put(
         `${API_BASE}/api/products/${id}`,
         {
@@ -145,6 +156,7 @@ export default function EditProductPage({ params }) {
           description: form.description,
           category: form.category,
           stock: Number(form.stock),
+          image: form.image,
         },
         {
           headers: {
@@ -165,7 +177,6 @@ export default function EditProductPage({ params }) {
     }
   };
 
-  // Loading state
   if (authLoading || loading) {
     return (
       <div className={styles.page}>
@@ -246,6 +257,37 @@ export default function EditProductPage({ params }) {
               onChange={handleChange}
               className={styles.textarea}
             />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="image">Image URL</label>
+            <input
+              id="image"
+              name="image"
+              type="url"
+              placeholder="https://example.com/product-image.jpg"
+              value={form.image}
+              onChange={handleChange}
+              className={styles.input}
+            />
+            <small className={styles.imageHint}>
+              Paste a URL to a product image (optional)
+            </small>
+
+            <div className={styles.imagePreview}>
+              {imagePreviewUrl && !imagePreviewFailed ? (
+                <img
+                  src={imagePreviewUrl}
+                  alt={`${form.name || "Product"} preview`}
+                  className={styles.imagePreviewImg}
+                  onError={() => setImagePreviewFailed(true)}
+                />
+              ) : (
+                <div className={styles.imagePreviewFallback}>
+                  {imagePreviewLetter}
+                </div>
+              )}
+            </div>
           </div>
 
           <button

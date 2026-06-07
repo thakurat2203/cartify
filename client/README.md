@@ -19,31 +19,44 @@ NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ## ✨ **Features**
 
 ### **User Features**
+
 - ✅ User registration & login
 - ✅ Browse all products
 - ✅ View product details
+- ✅ Product images with clean fallback UI
 - ✅ Add/remove items from cart
+- ✅ Cart quantity limits based on available stock
 - ✅ Persistent shopping cart (localStorage)
-- ✅ Checkout & order placement
+- ✅ Structured checkout with shipping method and fee summary
 - ✅ Order history tracking
 - ✅ Responsive design
 
 ### **Admin Features**
+
+- ✅ Admin dashboard with store summary metrics
 - ✅ Product management dashboard
 - ✅ Create/edit/delete products
+- ✅ Add product image URLs with live preview
 - ✅ View all orders
 - ✅ Update order status
+- ✅ Filter orders by status
+- ✅ Filter products by stock health
+- ✅ Low-stock and out-of-stock inventory previews
 - ✅ Admin-only route protection
 
 ### **Technical Features**
+
 - ✅ Next.js App Router (modern)
 - ✅ Zustand for persistent cart state
 - ✅ Context API for authentication
+- ✅ Socket.IO client for live order status updates
 - ✅ CSS Modules for styling
 - ✅ Form validation
+- ✅ Optional image URL validation
 - ✅ Error boundaries & error handling
 
 ---
+
 ## ✨ **Next.js Features Used**
 
 - **App Router**: Modern file-based routing in `/app` directory
@@ -55,22 +68,25 @@ NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 - **Middleware Ready**: Extensible middleware support
 
 ---
+
 ## 🛠️ **Tech Stack**
 
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| **Next.js** | 16 | React framework, SSR, routing |
-| **React** | 19 | UI library |
-| **Zustand** | Latest | State management (cart) |
-| **Axios** | Latest | HTTP client |
-| **CSS Modules** | Built-in | Component styling |
-| **JavaScript** | ES6+ | Language |
+| Technology      | Version  | Purpose                       |
+| --------------- | -------- | ----------------------------- |
+| **Next.js**     | 16       | React framework, SSR, routing |
+| **React**       | 19       | UI library                    |
+| **Zustand**     | Latest   | State management (cart)       |
+| **Axios**       | Latest   | HTTP client                   |
+| **Socket.IO Client** | Latest | Live order status updates |
+| **CSS Modules** | Built-in | Component styling             |
+| **JavaScript**  | ES6+     | Language                      |
 
 ---
 
 ## 🚀 **Getting Started**
 
 ### **Prerequisites**
+
 - Node.js 18+
 - npm or yarn
 - Backend API running locally on port 5000, or the live Render API
@@ -78,17 +94,20 @@ NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ### **Installation**
 
 1. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 2. **Set up environment variables**
-Create `.env.local` file for local development:
+   Copy `.env.example` to `.env.local` for local development:
+
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
 
 For Vercel production, set:
+
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
@@ -96,20 +115,24 @@ NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ### **Running Locally**
 
 **Development Mode:**
+
 ```bash
 npm run dev
 ```
+
 Opens [http://localhost:3000](http://localhost:3000)
 
 Production site: [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
 
 **Production Build:**
+
 ```bash
 npm run build
 npm start
 ```
 
 **Linting:**
+
 ```bash
 npm run lint
 ```
@@ -126,9 +149,10 @@ npm run lint
 │  /app (App Router)                          │
 │  ├── layout.js (Root layout)                │
 │  ├── page.js (Home/Products)                │
-│  ├── /admin (Protected routes)              │
-│  │   ├── /products (CRUD)                   │
-│  │   └── /orders (Management)               │
+│  ├── /admin (Dashboard + protected routes)  │
+│  │   ├── page.js (Dashboard metrics)        │
+│  │   ├── /products (CRUD + stock filter)    │
+│  │   └── /orders (Management + filter)      │
 │  ├── /cart (Shopping cart)                  │
 │  ├── /checkout (Order creation)             │
 │  ├── /orders (User order history)           │
@@ -196,12 +220,15 @@ src/
 ## 🔐 **State Management**
 
 ### **Cart State (Zustand)**
+
 - Persistent cart with localStorage
 - Add/remove/update items
+- Stock info stored in cart items for quantity controls
 - Cart totals calculation
 - Hydration for SSR compatibility
 
 ### **Auth State (Context API)**
+
 - User login/logout
 - Token management
 - Role-based access
@@ -211,17 +238,39 @@ src/
 ## 📝 **Form Validation**
 
 Validation rules in `utils/validation.js`:
+
 - **Email:** Valid format required
-- **Password:** Min 6 characters
-- **Name:** 2-50 characters
-- **Product Name:** Required, 1-100 characters
+- **Password:** Min 8 characters
+- **Name:** 2-100 characters
+- **Product Name:** Required, 2-200 characters
 - **Price:** Positive number
+- **Stock:** Non-negative integer
+- **Category:** Required, max 50 characters
+- **Description:** Optional, max 1000 characters
+- **Image URL:** Optional, valid `http` or `https` URL, max 500 characters
+- **Phone:** 7-20 characters, numbers and common phone symbols only
+- **Address line 1:** Required, 5-200 characters
+- **Address line 2:** Optional, max 200 characters
+- **City/State/Country:** 2-80 characters
+- **Postal code:** 3-20 characters, letters, numbers, spaces, and hyphens
+- **Shipping method:** `standard` or `express`
 
 ---
 
 ## 🧪 **Development**
 
+### **UI/UX Polish**
+
+- Cleaner global spacing, focus states, and border radius scale
+- Responsive header navigation for customer and admin links
+- Improved catalog cards, product image fallbacks, filters, and pagination styling
+- Cleaner cart, checkout, order, and admin management panels
+- More consistent admin product/order buttons, filters, badges, and mobile layouts
+
+---
+
 ### **Available Scripts**
+
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production
@@ -263,8 +312,7 @@ After changing this variable in Vercel, redeploy the frontend.
 - [ ] Dark mode toggle
 - [ ] Mobile app (React Native)
 - [ ] Internationalization (i18n)
-- [ ] Comprehensive E2E tests
 
 ---
 
-**Last Updated:** May 31, 2026
+**Last Updated:** June 7, 2026

@@ -1,16 +1,15 @@
 const productService = require("../services/productService");
 
-// Get all products
+// Product controllers only read request data and delegate rules to the service.
 const getProducts = async (req, res, next) => {
   try {
-    const products = await productService.getAllProducts();
+    const products = await productService.getAllProducts(req.query);
     res.json(products);
   } catch (err) {
     next(err);
   }
 };
 
-// Get product by ID
 const getProductById = async (req, res, next) => {
   try {
     const productId = req.params.id;
@@ -21,16 +20,16 @@ const getProductById = async (req, res, next) => {
   }
 };
 
-// Create product
 const createProduct = async (req, res, next) => {
   try {
-    const { name, price, description, category, stock } = req.body;
+    const { name, price, description, category, stock, image } = req.body;
     const product = await productService.createProduct({
       name,
       price,
       description,
       category,
       stock,
+      image,
     });
 
     res.status(201).json({
@@ -42,17 +41,17 @@ const createProduct = async (req, res, next) => {
   }
 };
 
-// Update product
 const updateProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
-    const { name, price, description, category, stock } = req.body;
+    const { name, price, description, category, stock, image } = req.body;
     const updatedProduct = await productService.updateProduct(productId, {
       name,
       price,
       description,
       category,
       stock,
+      image,
     });
 
     res.status(200).json({
@@ -64,7 +63,6 @@ const updateProduct = async (req, res, next) => {
   }
 };
 
-// Delete product
 const deleteProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;

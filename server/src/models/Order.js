@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
   {
+    // Snapshot product details at checkout so later catalog edits do not alter old orders.
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
@@ -39,7 +40,37 @@ const shippingInfoSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    address: {
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    addressLine1: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    addressLine2: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    city: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    state: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    postalCode: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    country: {
       type: String,
       required: true,
       trim: true,
@@ -58,11 +89,34 @@ const orderSchema = new mongoose.Schema(
     orderItems: {
       type: [orderItemSchema],
       required: true,
-      validate: [(value) => value.length > 0, "Order must have at least one item"],
+      validate: [
+        (value) => value.length > 0,
+        "Order must have at least one item",
+      ],
     },
     shippingInfo: {
       type: shippingInfoSchema,
       required: true,
+    },
+    shippingMethod: {
+      type: String,
+      enum: ["standard", "express"],
+      default: "standard",
+    },
+    subtotal: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    shippingFee: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    platformFee: {
+      type: Number,
+      min: 0,
+      default: 0,
     },
     totalItems: {
       type: Number,

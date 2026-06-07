@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
+
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,21 +12,40 @@ import styles from "./page.module.css";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
-/**
- * Admin dashboard to view and manage all products.
- */
+const STOCK_FILTERS = [
+  { value: "all", label: "All products" },
+  { value: "good", label: "Good stock" },
+  { value: "low", label: "Low stock" },
+  { value: "out", label: "Out of stock" },
+];
+
+const getStockStatus = (stock) => {
+  const quantity = Number(stock);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return "out";
+  }
+
+  if (quantity <= 10) {
+    return "low";
+  }
+
+  return "good";
+};
+
 export default function AdminProductsPage() {
   const { user, token, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // State management
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [imageErrors, setImageErrors] = useState({});
+  const [stockFilter, setStockFilter] = useState("all");
 
-  // Effect to verify admin access and load product data
   useEffect(() => {
+    // Admin screens must wait for auth hydration before enforcing role access.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
@@ -35,11 +56,15 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // API call to fetch products
     const loadProducts = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/products`);
-        setProducts(response.data || []);
+        const response = await axios.get(`${API_BASE}/api/products`, {
+          params: {
+            limit: 50,
+          },
+        });
+
+        setProducts(response.data.products || []);
       } catch (err) {
         const apiMessage =
           err.response?.data?.message ||
@@ -56,8 +81,8 @@ export default function AdminProductsPage() {
     }
   }, [authLoading, isAuthenticated, router, user]);
 
-  // Delete product logic with confirmation
   const handleDelete = async (productId) => {
+    // Browser confirmation is the last safety check before deleting inventory.
     const confirmed = window.confirm(
       "Are you sure you want to delete this product?",
     );
@@ -73,8 +98,9 @@ export default function AdminProductsPage() {
         },
       });
 
-      // Update local state after deletion
-      setProducts((prev) => prev.filter((product) => product._id !== productId));
+      setProducts((prev) =>
+        prev.filter((product) => product._id !== productId),
+      );
       setSuccess("Product deleted successfully!");
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
@@ -89,7 +115,13 @@ export default function AdminProductsPage() {
     }
   };
 
-  // Placeholder for loading states
+  const filteredProducts =
+    stockFilter === "all"
+      ? products
+      : products.filter(
+          (product) => getStockStatus(product.stock) === stockFilter,
+        );
+
   if (authLoading || loading) {
     return (
       <div className={styles.page}>
@@ -104,7 +136,6 @@ export default function AdminProductsPage() {
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* Page header and primary actions */}
         <div className={styles.topRow}>
           <div>
             <Link href="/" className={styles.backLink}>
@@ -121,35 +152,80 @@ export default function AdminProductsPage() {
           </Link>
         </div>
 
-        {/* User feedback messages */}
         {error && <p className={styles.error}>{error}</p>}
         {success && <p className={styles.success}>{success}</p>}
+
+        {!error && products.length > 0 && (
+          <div className={styles.filterRow}>
+            <label htmlFor="stockFilter">Stock</label>
+            <select
+              id="stockFilter"
+              className={styles.select}
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+            >
+              {STOCK_FILTERS.map((filter) => (
+                <option key={filter.value} value={filter.value}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {!error && products.length === 0 && (
           <p className={styles.message}>No products found.</p>
         )}
 
-        {/* Interactive product inventory list */}
-        {!error && products.length > 0 && (
+        {!error && products.length > 0 && filteredProducts.length === 0 && (
+          <p className={styles.message}>No products match this filter.</p>
+        )}
+
+        {!error && filteredProducts.length > 0 && (
           <ul className={styles.list}>
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <li key={product._id} className={styles.card}>
+                <div className={styles.thumbnail}>
+                  {product.image && !imageErrors[product._id] ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className={styles.thumbnailImage}
+                      onError={() =>
+                        setImageErrors((prev) => ({
+                          ...prev,
+                          [product._id]: true,
+                        }))
+                      }
+                    />
+                  ) : null}
+
+                  {!product.image || imageErrors[product._id] ? (
+                    <div className={styles.fallbackLetter}>
+                      {product.name.charAt(0).toUpperCase()}
+                    </div>
+                  ) : null}
+                </div>
                 <div className={styles.cardMain}>
                   <h2 className={styles.productName}>{product.name}</h2>
                   <p className={styles.meta}>Category: {product.category}</p>
                   <p className={styles.meta}>Price: Rs. {product.price}</p>
                   <p className={styles.meta}>Stock: {product.stock}</p>
-                  {/* Dynamic stock status badges */}
                   {product.stock > 10 ? (
-                    <span className={`${styles.badge} ${styles.highstock}`}>Good stock</span>
+                    <span className={`${styles.badge} ${styles.highstock}`}>
+                      Good stock
+                    </span>
                   ) : product.stock > 0 ? (
-                    <span className={`${styles.badge} ${styles.lowstock}`}>Low stock</span>
+                    <span className={`${styles.badge} ${styles.lowstock}`}>
+                      Low stock
+                    </span>
                   ) : (
-                    <span className={`${styles.badge} ${styles.outofstock}`}>Out of stock</span>
+                    <span className={`${styles.badge} ${styles.outofstock}`}>
+                      Out of stock
+                    </span>
                   )}
                 </div>
 
-                {/* Administrative actions for individual products */}
                 <div className={styles.actions}>
                   <Link
                     href={`/admin/products/${product._id}/edit`}

@@ -10,24 +10,29 @@ import styles from "./page.module.css";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
+const formatShippingMethod = (method) => {
+  if (method === "express") {
+    return "Express delivery";
+  }
+
+  return "Standard delivery";
+};
+
 export default function OrdersPage() {
-  // Get authentication state and routing
   const { token, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // Local state for orders, loading, and error handling
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Redirect to login if the user is not authenticated
+    // Wait for auth hydration before redirecting or fetching token-protected orders.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
     }
 
-    // Fetch orders belonging to the logged-in user
     const loadOrders = async () => {
       try {
         const response = await axios.get(`${API_BASE}/api/orders/my-orders`, {
@@ -39,22 +44,18 @@ export default function OrdersPage() {
         setOrders(response.data.orders || []);
       } catch (err) {
         const apiMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to load orders";
+          err.response?.data?.message || err.message || "Failed to load orders";
         setError(apiMessage);
       } finally {
         setLoading(false);
       }
     };
 
-    // Only attempt to load orders if we have an auth token
     if (token) {
       loadOrders();
     }
   }, [authLoading, isAuthenticated, router, token]);
 
-  // Show loading state while checking auth or fetching data
   if (authLoading || loading) {
     return (
       <div className={styles.page}>
@@ -77,15 +78,12 @@ export default function OrdersPage() {
 
         <h1 className={styles.title}>My Orders</h1>
 
-        {/* Show error message if fetch fails */}
         {error && <p className={styles.error}>{error}</p>}
 
-        {/* Show message if no orders exist */}
         {!error && orders.length === 0 && (
           <p className={styles.message}>You have not placed any orders yet.</p>
         )}
 
-        {/* Render the list of orders */}
         {!error && orders.length > 0 && (
           <ul className={styles.list}>
             {orders.map((order) => (
@@ -107,13 +105,18 @@ export default function OrdersPage() {
                   <span className={styles.value}>Rs. {order.totalPrice}</span>
                 </p>
                 <p className={styles.row}>
+                  <strong className={styles.label}>Shipping:</strong>
+                  <span className={styles.value}>
+                    {formatShippingMethod(order.shippingMethod)}
+                  </span>
+                </p>
+                <p className={styles.row}>
                   <strong className={styles.label}>Placed on:</strong>
                   <span className={styles.value}>
                     {new Date(order.createdAt).toLocaleString()}
                   </span>
                 </p>
 
-                {/* Link to view specific order details */}
                 <Link
                   href={`/orders/${order._id}`}
                   className={styles.detailsLink}

@@ -1,6 +1,6 @@
 const authService = require("../services/authService");
 
-// Register a new user
+// Auth controllers keep HTTP response shape separate from service validation.
 const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -15,7 +15,6 @@ const registerUser = async (req, res, next) => {
   }
 };
 
-// Login user and return token
 const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -31,7 +30,6 @@ const loginUser = async (req, res, next) => {
   }
 };
 
-// Get profile for current authenticated user
 const getMe = async (req, res, next) => {
   try {
     const userId = req.user.userId;

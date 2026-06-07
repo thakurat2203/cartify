@@ -16,7 +16,6 @@ JWT_SECRET=your_super_secret_jwt_key_here_min_32_chars
 JWT_EXPIRE=1d
 NODE_ENV=production
 PORT=5000
-API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ```
 
@@ -27,22 +26,28 @@ The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the 
 ## ✨ **Features**
 
 ### **Core Functionality**
+
 - ✅ RESTful API endpoints
 - ✅ User authentication with JWT
 - ✅ Product CRUD operations
 - ✅ Order management & tracking
+- ✅ Structured checkout with shipping and platform fee calculation
+- ✅ Admin dashboard summary API
 - ✅ Inventory management
+- ✅ Low-stock and out-of-stock inventory visibility
 - ✅ Role-based access control (admin/shopper)
 
 ### **Security Features**
+
 - ✅ Password hashing (bcryptjs)
 - ✅ JWT token authentication
 - ✅ Backend price verification (prevents fraud)
-- ✅ Stock validation before orders
+- ✅ Atomic stock reservation before orders
 - ✅ Input validation on all endpoints
 - ✅ Error handling middleware
 
 ### **Technical Features**
+
 - ✅ Express.js middleware architecture
 - ✅ Service layer for business logic
 - ✅ MongoDB with Mongoose ODM
@@ -51,6 +56,7 @@ The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the 
 - ✅ Database seeding scripts
 
 ---
+
 ## 🏗️ **Backend Architecture**
 
 ```
@@ -71,19 +77,21 @@ The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the 
 │  ├── authController.js                              │
 │  ├── productController.js                           │
 │  ├── orderController.js                             │
+│  ├── adminController.js                             │
 │  └── healthController.js                            │
 │         │                                            │
 │         ▼                                            │
 │  Services (Business Logic)                           │
 │  ├── authService.js (register, login, verify)       │
 │  ├── productService.js (CRUD operations)            │
-│  └── orderService.js (order processing)             │
+│  ├── orderService.js (order processing)             │
+│  └── adminService.js (dashboard metrics)            │
 │         │                                            │
 │         ▼                                            │
 │  Mongoose Models (Data Validation)                   │
 │  ├── User.js (email, password, role)                │
 │  ├── Product.js (name, price, stock)                │
-│  └── Order.js (items, status, address)              │
+│  └── Order.js (items, shipping, totals, status)     │
 │         │                                            │
 │         ▼                                            │
 │  MongoDB Collections                                 │
@@ -118,7 +126,7 @@ The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the 
 │  5. Create user in MongoDB with role='shopper'          │
 │         │                                                │
 │         ▼                                                │
-│  6. Return: JWT token + user data                       │
+│  6. Return: user data                                   │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 
@@ -136,7 +144,7 @@ The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the 
 │         │                                                │
 │         ▼                                                │
 │  4. If invalid: Return 401 error                        │
-│  5. If valid: Generate JWT token (valid 24 hours)       │
+│  5. If valid: Generate JWT token using JWT_EXPIRE       │
 │         │                                                │
 │         ▼                                                │
 │  6. Return: JWT token + user data (email, role, name)   │
@@ -167,22 +175,24 @@ The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the 
 ```
 
 ---
+
 ## 🛠️ **Tech Stack**
 
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| **Node.js** | 18+ | JavaScript runtime |
-| **Express** | Latest | Web server framework |
-| **MongoDB** | Latest | NoSQL database |
-| **Mongoose** | Latest | MongoDB ODM |
-| **bcryptjs** | Latest | Password hashing |
-| **jsonwebtoken** | Latest | JWT authentication |
+| Technology       | Version | Purpose              |
+| ---------------- | ------- | -------------------- |
+| **Node.js**      | 18+     | JavaScript runtime   |
+| **Express**      | Latest  | Web server framework |
+| **MongoDB**      | Latest  | NoSQL database       |
+| **Mongoose**     | Latest  | MongoDB ODM          |
+| **bcryptjs**     | Latest  | Password hashing     |
+| **jsonwebtoken** | Latest  | JWT authentication   |
 
 ---
 
 ## 🚀 **Getting Started**
 
 ### **Prerequisites**
+
 - Node.js 18+
 - npm or yarn
 - MongoDB 4.4+
@@ -190,39 +200,42 @@ The `CLIENT_URL` value is required for CORS so the Vercel frontend can call the 
 ### **Installation**
 
 1. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 2. **Set up environment variables**
-Create `.env` file (copy from `.env.example`):
+   Create `.env` file. From the `server` folder:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env`:
+
 ```env
 MONGO_URI=mongodb://localhost:27017/ecommerce
 JWT_SECRET=your_super_secret_jwt_key_here_min_32_chars
 JWT_EXPIRE=1d
 NODE_ENV=development
 PORT=5000
-API_BASE_URL=http://localhost:5000
 CLIENT_URL=http://localhost:3000
 ```
 
 For Render production, use:
+
 ```env
 MONGO_URI=your_mongodb_atlas_connection_string
 JWT_SECRET=your_super_secret_jwt_key_here_min_32_chars
 JWT_EXPIRE=1d
 NODE_ENV=production
 PORT=5000
-API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ```
 
 3. **Start MongoDB**
+
 ```bash
 mongod
 ```
@@ -230,16 +243,19 @@ mongod
 ### **Running the Server**
 
 **Start the server:**
+
 ```bash
 npm start
 ```
 
 **Health Check:**
+
 ```bash
 curl http://localhost:5000/health
 ```
 
 Live health check:
+
 ```bash
 curl https://cartify-backend-lg8z.onrender.com/health
 ```
@@ -249,12 +265,15 @@ curl https://cartify-backend-lg8z.onrender.com/health
 ## 📚 **API Endpoints**
 
 ### **Base URL**
+
 Production:
+
 ```
 https://cartify-backend-lg8z.onrender.com/api
 ```
 
 Local:
+
 ```
 http://localhost:5000/api
 ```
@@ -264,6 +283,7 @@ http://localhost:5000/api
 ## 🔐 **Authentication Endpoints** (`/api/auth`)
 
 ### **Register User**
+
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -276,6 +296,7 @@ Content-Type: application/json
 ```
 
 ### **Login User**
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -287,6 +308,7 @@ Content-Type: application/json
 ```
 
 ### **Get Current User**
+
 ```http
 GET /api/auth/me
 Authorization: Bearer <token>
@@ -297,16 +319,51 @@ Authorization: Bearer <token>
 ## 📦 **Product Endpoints** (`/api/products`)
 
 ### **Get All Products**
+
 ```http
 GET /api/products
 ```
 
+Supports optional query parameters:
+
+```http
+GET /api/products?search=phone&category=accessories&minPrice=500&maxPrice=2000&sort=price_asc&page=1&limit=8
+```
+
+Query parameters:
+
+| Name       | Description                                                                   |
+| ---------- | ----------------------------------------------------------------------------- |
+| `search`   | Searches product name and description                                         |
+| `category` | Filters by exact category, case-insensitive                                   |
+| `minPrice` | Minimum product price                                                         |
+| `maxPrice` | Maximum product price                                                         |
+| `sort`     | One of `newest`, `oldest`, `price_asc`, `price_desc`, `name_asc`, `name_desc` |
+| `page`     | Page number, defaults to `1`                                                  |
+| `limit`    | Products per page, defaults to `8`, max `50`                                  |
+
+Response:
+
+```json
+{
+  "products": [],
+  "page": 1,
+  "limit": 8,
+  "totalPages": 3,
+  "totalProducts": 19,
+  "hasNextPage": true,
+  "hasPrevPage": false
+}
+```
+
 ### **Get Product by ID**
+
 ```http
 GET /api/products/:id
 ```
 
 ### **Create Product** (Admin only)
+
 ```http
 POST /api/products
 Authorization: Bearer <admin_token>
@@ -316,17 +373,21 @@ Content-Type: application/json
   "name": "New Product",
   "price": 49.99,
   "description": "Product description",
-  "stock": 50
+  "category": "accessories",
+  "stock": 50,
+  "image": "https://example.com/product-image.jpg"
 }
 ```
 
 ### **Update Product** (Admin only)
+
 ```http
 PUT /api/products/:id
 Authorization: Bearer <admin_token>
 ```
 
 ### **Delete Product** (Admin only)
+
 ```http
 DELETE /api/products/:id
 Authorization: Bearer <admin_token>
@@ -337,37 +398,61 @@ Authorization: Bearer <admin_token>
 ## 🛒 **Order Endpoints** (`/api/orders`)
 
 ### **Create Order**
+
 ```http
 POST /api/orders
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "items": [
+  "orderItems": [
     {
-      "productId": "507f1f77bcf86cd799439011",
+      "product": "507f1f77bcf86cd799439011",
       "quantity": 2
     }
   ],
-  "shippingAddress": "123 Main St, City, State 12345"
+  "shippingInfo": {
+    "fullName": "John Doe",
+    "email": "user@example.com",
+    "phone": "+91 9876543210",
+    "addressLine1": "123 Main Street",
+    "addressLine2": "Apartment 4B",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "postalCode": "400001",
+    "country": "India"
+  },
+  "shippingMethod": "standard"
 }
 ```
 
+`shippingMethod` must be `standard` or `express`. The server recalculates product prices, subtotal, shipping fee, platform fee, and total price before saving the order.
+
 ### **Get User's Orders**
+
 ```http
-GET /api/orders
+GET /api/orders/my-orders
 Authorization: Bearer <token>
 ```
 
+### **Get All Orders** (Admin only)
+
+```http
+GET /api/orders
+Authorization: Bearer <admin_token>
+```
+
 ### **Get Order by ID**
+
 ```http
 GET /api/orders/:id
 Authorization: Bearer <token>
 ```
 
 ### **Update Order Status** (Admin only)
+
 ```http
-PUT /api/orders/:id
+PUT /api/orders/:id/status
 Authorization: Bearer <admin_token>
 Content-Type: application/json
 
@@ -378,9 +463,72 @@ Content-Type: application/json
 
 ---
 
+After a successful status update, the backend broadcasts a Socket.IO
+`order:status-updated` event to connected clients watching that order.
+
+---
+
+## **WebSocket Events**
+
+Cartify uses Socket.IO for live order status updates. REST APIs still save and validate data; WebSockets only notify connected clients after an order status changes.
+
+Client to server:
+
+- `order:join` - join live updates for one order. Payload: `{ orderId, token }`
+- `order:leave` - leave one order room. Payload: `{ orderId }`
+
+Server to client:
+
+- `order:status-updated` - emitted after admin updates an order status. Payload: `{ orderId, status, updatedAt }`
+- `order:error` - emitted when a socket join fails or is not allowed.
+
+Order rooms are JWT-protected. Customers can join only their own order room; admins can join any order room.
+
+---
+
+## 📊 **Admin Dashboard Endpoints** (`/api/admin`)
+
+### **Get Dashboard Summary** (Admin only)
+
+```http
+GET /api/admin/dashboard
+Authorization: Bearer <admin_token>
+```
+
+Returns store-level admin metrics:
+
+```json
+{
+  "dashboard": {
+    "totalProducts": 20,
+    "totalOrders": 12,
+    "totalRevenue": 5420,
+    "activeOrders": 4,
+    "lowStockCount": 3,
+    "outOfStockCount": 1,
+    "lowStockThreshold": 10,
+    "ordersByStatus": {
+      "placed": 2,
+      "processing": 1,
+      "shipped": 1,
+      "delivered": 7,
+      "cancelled": 1
+    },
+    "recentOrders": [],
+    "lowStockProducts": [],
+    "outOfStockProducts": []
+  }
+}
+```
+
+`totalRevenue` represents non-cancelled order value because payment processing has not been added yet.
+
+---
+
 ## 🗄️ **Database Models**
 
 ### **User Model**
+
 ```javascript
 {
   email: String (unique),
@@ -392,6 +540,7 @@ Content-Type: application/json
 ```
 
 ### **Product Model**
+
 ```javascript
 {
   name: String,
@@ -399,20 +548,44 @@ Content-Type: application/json
   price: Number,
   stock: Number,
   category: String,
-  image: String,
+  image: String (URL),
   createdAt: Date
 }
 ```
 
 ### **Order Model**
+
 ```javascript
 {
   user: ObjectId (ref: User),
-  items: [...],
+  orderItems: [
+    {
+      product: ObjectId (ref: Product),
+      name: String,
+      price: Number,
+      quantity: Number
+    }
+  ],
+  shippingInfo: {
+    fullName: String,
+    email: String,
+    phone: String,
+    addressLine1: String,
+    addressLine2: String,
+    city: String,
+    state: String,
+    postalCode: String,
+    country: String
+  },
+  shippingMethod: String ("standard" | "express"),
+  subtotal: Number,
+  shippingFee: Number,
+  platformFee: Number,
+  totalItems: Number,
   totalPrice: Number,
-  status: String ("pending" | "processing" | "shipped" | "delivered"),
-  shippingAddress: String,
-  createdAt: Date
+  status: String ("placed" | "processing" | "shipped" | "delivered" | "cancelled"),
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
@@ -421,22 +594,26 @@ Content-Type: application/json
 ## 🔐 **Authentication & Authorization**
 
 ### **JWT Token**
-- Issued on login/register
-- Valid for 24 hours
+
+- Issued on login
+- Valid for the configured `JWT_EXPIRE` value (`1d` by default)
 - Sent in `Authorization: Bearer <token>` header
 
 ### **Protected Routes**
+
 ```
 Requires authenticated user:
 GET /api/auth/me
-GET /api/orders
+GET /api/orders/my-orders
 POST /api/orders
 
 Requires admin role:
+GET /api/admin/dashboard
+GET /api/orders
 POST /api/products
 PUT /api/products/:id
 DELETE /api/products/:id
-PUT /api/orders/:id
+PUT /api/orders/:id/status
 ```
 
 ---
@@ -445,7 +622,7 @@ PUT /api/orders/:id
 
 - ✅ Passwords hashed with bcryptjs (10 salt rounds)
 - ✅ Backend price verification (prevents fraud)
-- ✅ Stock validation before orders
+- ✅ Atomic stock reservation before orders
 - ✅ JWT authentication with expiration
 - ✅ Input validation on all endpoints
 - ✅ Role-based authorization middleware
@@ -455,6 +632,7 @@ PUT /api/orders/:id
 ## 📦 **Database Seeding**
 
 ### **Seed Sample Products**
+
 ```bash
 npm run seed
 ```
@@ -464,6 +642,7 @@ npm run seed
 ## 📝 **Error Handling**
 
 ### **Error Response Format**
+
 ```json
 {
   "error": {
@@ -495,9 +674,8 @@ npm run seed           # Seed database with sample products
 - [ ] Payment processing (Stripe)
 - [ ] Email notifications
 - [ ] WebSocket for real-time updates
-- [ ] Comprehensive test suite
 - [ ] API documentation (Swagger)
 
 ---
 
-**Last Updated:** May 31, 2026
+**Last Updated:** June 7, 2026

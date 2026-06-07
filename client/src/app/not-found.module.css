@@ -13,7 +13,7 @@
   padding: 32px 28px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 28px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
 
@@ -39,8 +39,13 @@
 .link {
   display: inline-block;
   padding: 12px 18px;
-  border-radius: 999px;
-  background: #111827;
+  border-radius: var(--radius);
+  background: var(--primary);
   color: #f8fafc;
   font-weight: 600;
+}
+
+.link:hover {
+  background: var(--primary-dark);
+  color: #ffffff;
 }

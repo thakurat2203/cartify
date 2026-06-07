@@ -18,19 +18,29 @@ const ORDER_STATUSES = [
   "cancelled",
 ];
 
+const STATUS_FILTERS = ["all", ...ORDER_STATUSES];
+
+const formatShippingMethod = (method) => {
+  if (method === "express") {
+    return "Express delivery";
+  }
+
+  return "Standard delivery";
+};
+
 export default function AdminOrdersPage() {
   const { user, token, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // State for tracking orders and feedback
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [updatingId, setUpdatingId] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  // Check admin auth and load all orders
   useEffect(() => {
+    // Admin screens must wait for auth hydration before enforcing role access.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
@@ -41,7 +51,6 @@ export default function AdminOrdersPage() {
       return;
     }
 
-    // Load order list from API
     const loadOrders = async () => {
       try {
         const response = await axios.get(`${API_BASE}/api/orders`, {
@@ -65,7 +74,7 @@ export default function AdminOrdersPage() {
     }
   }, [authLoading, isAuthenticated, router, token, user]);
 
-  // Sync dropdown with local orders state
+  // The dropdown edits local state first; the save button persists the selected status.
   const handleStatusChange = (orderId, nextStatus) => {
     setOrders((prev) =>
       prev.map((order) =>
@@ -74,7 +83,6 @@ export default function AdminOrdersPage() {
     );
   };
 
-  // Persist status change to server
   const handleUpdateStatus = async (orderId, status) => {
     try {
       setUpdatingId(orderId);
@@ -111,7 +119,11 @@ export default function AdminOrdersPage() {
     }
   };
 
-  // Loading view
+  const filteredOrders =
+    statusFilter === "all"
+      ? orders
+      : orders.filter((order) => order.status === statusFilter);
+
   if (authLoading || loading) {
     return (
       <div className={styles.page}>
@@ -141,13 +153,35 @@ export default function AdminOrdersPage() {
         {error && <p className={styles.error}>{error}</p>}
         {success && <p className={styles.success}>{success}</p>}
 
+        {!error && orders.length > 0 && (
+          <div className={styles.filterRow}>
+            <label htmlFor="statusFilter">Status</label>
+            <select
+              id="statusFilter"
+              className={styles.select}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {STATUS_FILTERS.map((status) => (
+                <option key={status} value={status}>
+                  {status === "all" ? "All orders" : status}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {!error && orders.length === 0 && (
           <p className={styles.message}>No orders found.</p>
         )}
 
-        {!error && orders.length > 0 && (
+        {!error && orders.length > 0 && filteredOrders.length === 0 && (
+          <p className={styles.message}>No orders match this filter.</p>
+        )}
+
+        {!error && filteredOrders.length > 0 && (
           <ul className={styles.list}>
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <li key={order._id} className={styles.card}>
                 <div className={styles.cardMain}>
                   <h2 className={styles.orderId}>Order #{order._id}</h2>
@@ -157,10 +191,16 @@ export default function AdminOrdersPage() {
                   <p className={styles.meta}>Items: {order.totalItems}</p>
                   <p className={styles.meta}>Total: Rs. {order.totalPrice}</p>
                   <p className={styles.meta}>
+                    Shipping: {formatShippingMethod(order.shippingMethod)}
+                  </p>
+                  <p className={styles.meta}>
                     Placed on: {new Date(order.createdAt).toLocaleString()}
                   </p>
-                  <span className={`${styles.badge} ${styles[`status-${order.status}`]}`}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  <span
+                    className={`${styles.badge} ${styles[`status-${order.status}`]}`}
+                  >
+                    {order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)}
                   </span>
                 </div>
 

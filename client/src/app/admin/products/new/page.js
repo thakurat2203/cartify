@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
+
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +13,7 @@ import {
   validateStock,
   validateCategory,
   validateDescription,
+  validateImageUrl,
 } from "@/utils/validation";
 import styles from "./page.module.css";
 
@@ -21,19 +24,22 @@ export default function NewProductPage() {
   const { user, token, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // Local state for product form data
   const [form, setForm] = useState({
     name: "",
     price: "",
     description: "",
     category: "",
     stock: "",
+    image: "",
   });
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
+  const imagePreviewUrl = form.image.trim();
+  const imagePreviewLetter = form.name.trim().charAt(0).toUpperCase() || "?";
 
-  // Redirect non-admins or unauthenticated users
   useEffect(() => {
+    // Admin screens must wait for auth hydration before enforcing role access.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
@@ -44,48 +50,46 @@ export default function NewProductPage() {
     }
   }, [authLoading, isAuthenticated, router, user]);
 
-  // Generic input change handler
   const handleChange = (e) => {
+    if (e.target.name === "image") {
+      // A changed URL deserves a fresh preview attempt after a previous load error.
+      setImagePreviewFailed(false);
+    }
+
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
 
-  // Validate form and create new product
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Client-side validation for product fields
-    // Validate name
+    // Client validation mirrors backend product rules before the admin submits.
     const nameValidation = validateProductName(form.name);
     if (!nameValidation.valid) {
       setMessage(nameValidation.error);
       return;
     }
 
-    // Validate price
     const priceValidation = validatePrice(form.price);
     if (!priceValidation.valid) {
       setMessage(priceValidation.error);
       return;
     }
 
-    // Validate category
     const categoryValidation = validateCategory(form.category);
     if (!categoryValidation.valid) {
       setMessage(categoryValidation.error);
       return;
     }
 
-    // Validate stock
     const stockValidation = validateStock(form.stock);
     if (!stockValidation.valid) {
       setMessage(stockValidation.error);
       return;
     }
 
-    // Validate description if provided
     if (form.description) {
       const descriptionValidation = validateDescription(form.description);
       if (!descriptionValidation.valid) {
@@ -94,11 +98,16 @@ export default function NewProductPage() {
       }
     }
 
+    const imageValidation = validateImageUrl(form.image);
+    if (!imageValidation.valid) {
+      setMessage(imageValidation.error);
+      return;
+    }
+
     try {
       setSubmitting(true);
       setMessage("");
 
-      // Send new product data to the server
       await axios.post(
         `${API_BASE}/api/products`,
         {
@@ -107,6 +116,7 @@ export default function NewProductPage() {
           description: form.description,
           category: form.category,
           stock: Number(form.stock),
+          image: form.image,
         },
         {
           headers: {
@@ -127,7 +137,6 @@ export default function NewProductPage() {
     }
   };
 
-  // Show placeholder while checking authentication
   if (authLoading) {
     return (
       <div className={styles.page}>
@@ -196,6 +205,37 @@ export default function NewProductPage() {
               onChange={handleChange}
               className={styles.input}
             />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="image">Image URL</label>
+            <input
+              id="image"
+              name="image"
+              type="url"
+              placeholder="https://example.com/product-image.jpg"
+              value={form.image}
+              onChange={handleChange}
+              className={styles.input}
+            />
+            <small className={styles.imageHint}>
+              Paste a URL to a product image (optional)
+            </small>
+
+            <div className={styles.imagePreview}>
+              {imagePreviewUrl && !imagePreviewFailed ? (
+                <img
+                  src={imagePreviewUrl}
+                  alt={`${form.name || "Product"} preview`}
+                  className={styles.imagePreviewImg}
+                  onError={() => setImagePreviewFailed(true)}
+                />
+              ) : (
+                <div className={styles.imagePreviewFallback}>
+                  {imagePreviewLetter}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className={styles.field}>

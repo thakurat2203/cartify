@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const config = require("../config");
 
-// Verify JWT and attach user to request
+// Attach the verified JWT claims used by downstream controllers and role checks.
 const protect = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -12,7 +13,7 @@ const protect = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwtSecret);
 
     req.user = {
       userId: decoded.userId,
@@ -25,7 +26,7 @@ const protect = (req, res, next) => {
   }
 };
 
-// Restrict access based on user role
+// Keep route-level authorization explicit beside each protected admin endpoint.
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

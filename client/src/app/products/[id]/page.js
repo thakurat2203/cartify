@@ -1,25 +1,47 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
+
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { useCartStore } from "@/store/cart-store";
 import styles from "./page.module.css";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
+const getStockBadge = (stock) => {
+  const quantity = Number(stock);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return { label: "Out of stock", className: styles.outStock };
+  }
+
+  if (quantity < 10) {
+    return { label: "Low stock", className: styles.lowStock };
+  }
+
+  return { label: "Good stock", className: styles.goodStock };
+};
+
 export default function ProductDetailPage({ params }) {
-  // Extract the product ID from route parameters
   const { id } = use(params);
 
-  // State management for product data, loading, and error states
+  // Each product page owns its own fetch state because route params change per item.
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [imageUnavailable, setImageUnavailable] = useState(false);
+  const addToCart = useCartStore((state) => state.addToCart);
 
-  // Fetch product details from the API on mount or when ID changes
+  // Reload details when the dynamic product id changes.
   useEffect(() => {
     const loadProduct = async () => {
+      setLoading(true);
+      setError("");
+      setImageUnavailable(false);
+
       try {
         const response = await axios.get(`${API_BASE}/api/products/${id}`);
         setProduct(response.data);
@@ -40,40 +62,66 @@ export default function ProductDetailPage({ params }) {
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* Back navigation */}
         <Link href="/" className={styles.backLink}>
           Back to catalog
         </Link>
 
-        {/* Status messages */}
         {loading && <p className={styles.info}>Loading product...</p>}
         {error && <p className={styles.error}>{error}</p>}
 
-        {/* Product Information Display */}
-        {!loading && !error && product && (
-          <article className={styles.card}>
-            <div className={styles.hero}>
-              <div className={styles.imagePlaceholder}>
-                {product.name.charAt(0)}
-              </div>
-              <div className={styles.content}>
-                <p className={styles.category}>{product.category}</p>
-                <h1 className={styles.title}>{product.name}</h1>
-                <p className={styles.price}>Rs. {product.price}</p>
-                <p className={styles.description}>
-                  {product.description || "No description available."}
-                </p>
-                {/* Stock and Status details */}
-                <div className={styles.meta}>
-                  <span>Stock: {product.stock}</span>
-                  <span>
-                    Status: {product.stock > 0 ? "In stock" : "Out of stock"}
-                  </span>
+        {!loading &&
+          !error &&
+          product &&
+          (() => {
+            const stockBadge = getStockBadge(product.stock);
+
+            return (
+              <article className={styles.card}>
+                <div className={styles.hero}>
+                  <div className={styles.imagePlaceholder}>
+                    {product.image && !imageUnavailable ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className={styles.productImage}
+                        onError={() => setImageUnavailable(true)}
+                      />
+                    ) : (
+                      <div className={styles.fallbackLetterLarge}>
+                        {product.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.content}>
+                    <p className={styles.category}>{product.category}</p>
+                    <h1 className={styles.title}>{product.name}</h1>
+                    <p className={styles.price}>Rs. {product.price}</p>
+                    <p className={styles.description}>
+                      {product.description || "No description available."}
+                    </p>
+                    <div className={styles.meta}>
+                      <span>Stock: {product.stock}</span>
+                      <span
+                        className={`${styles.stockBadge} ${stockBadge.className}`}
+                      >
+                        {stockBadge.label}
+                      </span>
+                    </div>
+
+                    {product.stock > 0 && (
+                      <button
+                        type="button"
+                        className={styles.addButton}
+                        onClick={() => addToCart(product)}
+                      >
+                        Add to cart
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </article>
-        )}
+              </article>
+            );
+          })()}
       </div>
     </div>
   );

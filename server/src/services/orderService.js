@@ -4,13 +4,25 @@ const createError = require("../utils/createError");
 const {
   validateEmail,
   validateName,
-  validateAddress,
+  validatePhone,
+  validateAddressLine,
+  validateCity,
+  validateState,
+  validatePostalCode,
+  validateCountry,
+  validateShippingMethod,
 } = require("../utils/validation");
 
+const shippingFees = {
+  standard: 49,
+  express: 149,
+};
+
+const platformFee = 10;
+
 class OrderService {
-  // Create order
   async createOrder(orderData, userId) {
-    const { orderItems, shippingInfo } = orderData;
+    const { orderItems, shippingInfo, shippingMethod = "standard" } = orderData;
 
     if (!Array.isArray(orderItems) || orderItems.length === 0) {
       throw createError("Order items are required", 400);
@@ -30,9 +42,50 @@ class OrderService {
       throw createError(emailValidation.error, 400);
     }
 
-    const addressValidation = validateAddress(shippingInfo.address);
-    if (!addressValidation.valid) {
-      throw createError(addressValidation.error, 400);
+    const shippingMethodValidation = validateShippingMethod(shippingMethod);
+    if (!shippingMethodValidation.valid) {
+      throw createError(shippingMethodValidation.error, 400);
+    }
+
+    // Validate the full checkout address before reserving stock.
+    const phoneValidation = validatePhone(shippingInfo.phone);
+    if (!phoneValidation.valid) {
+      throw createError(phoneValidation.error, 400);
+    }
+
+    const addressLine1Validation = validateAddressLine(
+      shippingInfo.addressLine1,
+    );
+    if (!addressLine1Validation.valid) {
+      throw createError(addressLine1Validation.error, 400);
+    }
+
+    const addressLine2Validation = validateAddressLine(
+      shippingInfo.addressLine2,
+      false,
+    );
+    if (!addressLine2Validation.valid) {
+      throw createError(addressLine2Validation.error, 400);
+    }
+
+    const cityValidation = validateCity(shippingInfo.city);
+    if (!cityValidation.valid) {
+      throw createError(cityValidation.error, 400);
+    }
+
+    const stateValidation = validateState(shippingInfo.state);
+    if (!stateValidation.valid) {
+      throw createError(stateValidation.error, 400);
+    }
+
+    const postalCodeValidation = validatePostalCode(shippingInfo.postalCode);
+    if (!postalCodeValidation.valid) {
+      throw createError(postalCodeValidation.error, 400);
+    }
+
+    const countryValidation = validateCountry(shippingInfo.country);
+    if (!countryValidation.valid) {
+      throw createError(countryValidation.error, 400);
     }
 
     // Keep only product id and quantity from the frontend.
@@ -103,41 +156,95 @@ class OrderService {
       0,
     );
 
-    const calculatedTotalPrice = safeOrderItems.reduce(
+    const calculatedSubtotal = safeOrderItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
 
-    const order = await Order.create({
-      user: userId,
-      orderItems: safeOrderItems,
-      shippingInfo: {
-        fullName: shippingInfo.fullName.trim(),
-        email: shippingInfo.email.trim().toLowerCase(),
-        address: shippingInfo.address.trim(),
-      },
-      totalItems: calculatedTotalItems,
-      totalPrice: calculatedTotalPrice,
-    });
+    const calculatedShippingFee = shippingFees[shippingMethod];
+    const calculatedPlatformFee = platformFee;
+    const calculatedTotalPrice =
+      calculatedSubtotal + calculatedShippingFee + calculatedPlatformFee;
+
+    const reservedItems = await this.reserveStock(safeOrderItems);
+
+    try {
+      const order = await Order.create({
+        user: userId,
+        orderItems: safeOrderItems,
+        shippingInfo: {
+          fullName: shippingInfo.fullName.trim(),
+          email: shippingInfo.email.trim().toLowerCase(),
+          phone: shippingInfo.phone.trim(),
+          addressLine1: shippingInfo.addressLine1.trim(),
+          addressLine2: shippingInfo.addressLine2
+            ? shippingInfo.addressLine2.trim()
+            : "",
+          city: shippingInfo.city.trim(),
+          state: shippingInfo.state.trim(),
+          postalCode: shippingInfo.postalCode.trim(),
+          country: shippingInfo.country.trim(),
+        },
+        shippingMethod,
+        subtotal: calculatedSubtotal,
+        shippingFee: calculatedShippingFee,
+        platformFee: calculatedPlatformFee,
+        totalItems: calculatedTotalItems,
+        totalPrice: calculatedTotalPrice,
+      });
+
+      return order;
+    } catch (err) {
+      await this.releaseStock(reservedItems);
+      throw err;
+    }
+  }
+
+  // Atomically reserve stock so simultaneous checkouts cannot oversell.
+  async reserveStock(orderItems) {
+    const reservedItems = [];
+
+    try {
+      for (const item of orderItems) {
+        const updatedProduct = await Product.findOneAndUpdate(
+          { _id: item.product, stock: { $gte: item.quantity } },
+          { $inc: { stock: -item.quantity } },
+          { returnDocument: "after" },
+        );
+
+        if (!updatedProduct) {
+          throw createError(`Not enough stock available for ${item.name}`, 400);
+        }
+
+        reservedItems.push(item);
+      }
+
+      return reservedItems;
+    } catch (err) {
+      await this.releaseStock(reservedItems);
+      throw err;
+    }
+  }
+
+  async releaseStock(orderItems) {
+    if (orderItems.length === 0) {
+      return;
+    }
 
     await Product.bulkWrite(
-      safeOrderItems.map((item) => ({
+      orderItems.map((item) => ({
         updateOne: {
           filter: { _id: item.product },
-          update: { $inc: { stock: -item.quantity } },
+          update: { $inc: { stock: item.quantity } },
         },
       })),
     );
-
-    return order;
   }
 
-  // Get user orders
   async getMyOrders(userId) {
     return await Order.find({ user: userId }).sort({ createdAt: -1 });
   }
 
-  // Get order by ID
   async getOrderById(orderId, userId, userRole) {
     const order = await Order.findById(orderId);
 
@@ -153,14 +260,12 @@ class OrderService {
     return order;
   }
 
-  // Get all orders (Admin)
   async getAllOrders() {
     return await Order.find()
       .populate("user", "name email role")
       .sort({ createdAt: -1 });
   }
 
-  // Update status (Admin)
   async updateOrderStatus(orderId, status) {
     if (!status) {
       throw createError("Status is required", 400);
@@ -174,6 +279,7 @@ class OrderService {
       "cancelled",
     ];
 
+    // Keep status transitions constrained to values supported by the model and admin UI.
     if (!allowedStatuses.includes(status)) {
       throw createError("Invalid order status", 400);
     }
@@ -190,5 +296,4 @@ class OrderService {
   }
 }
 
-// Export a single instance so all code uses the same service
 module.exports = new OrderService();

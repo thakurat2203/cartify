@@ -14,6 +14,10 @@ A complete, production-ready e-commerce platform built with the MERN stack (Mong
 - **Secure Authentication**: JWT-based auth with password hashing
 - **Role-Based Access**: Admin panel with restricted product & order management
 - **Persistent Cart**: Client-side cart with localStorage integration
+- **Product Images**: Admin-managed image URLs with previews and fallback UI
+- **Stock Safety**: Stock-aware cart controls and backend stock reservation
+- **Structured Checkout**: Full shipping fields, delivery method, and backend-calculated fees
+- **Admin Insights**: Dashboard metrics with order and inventory filters
 - **Production-Ready**: Input validation, error handling, and security best practices
 - **Live Deployment**: Frontend deployed on Vercel and backend deployed on Render
 
@@ -21,11 +25,11 @@ A complete, production-ready e-commerce platform built with the MERN stack (Mong
 
 ## **Live Deployment**
 
-| Service | Platform | URL |
-|---------|----------|-----|
-| Frontend | Vercel | [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app) |
-| Backend API | Render | [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com) |
-| Health Check | Render | [https://cartify-backend-lg8z.onrender.com/health](https://cartify-backend-lg8z.onrender.com/health) |
+| Service      | Platform | URL                                                                                                  |
+| ------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| Frontend     | Vercel   | [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)               |
+| Backend API  | Render   | [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com)               |
+| Health Check | Render   | [https://cartify-backend-lg8z.onrender.com/health](https://cartify-backend-lg8z.onrender.com/health) |
 
 The deployed frontend uses the Render API through:
 
@@ -44,24 +48,35 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ## 📸 **Features**
 
 ### 🛒 Customer Features
+
 - ✅ User registration & authentication (JWT)
-- ✅ Product browsing & filtering
+- ✅ Product browsing
+- ✅ Product images with fallback UI
 - ✅ Shopping cart with persistent storage
-- ✅ Checkout & order placement
+- ✅ Stock-aware cart quantity limits
+- ✅ Structured checkout with shipping method and fee summary
 - ✅ Order tracking & history
+- ✅ Live order status updates without refresh
 - ✅ Session persistence with localStorage
 
 ### 👨‍💼 Admin Features
+
 - ✅ Product management (create, update, delete)
+- ✅ Product image URL management
 - ✅ Order management & status tracking
+- ✅ Admin dashboard with store summary metrics
+- ✅ Order status filtering
 - ✅ Inventory management
+- ✅ Low-stock and out-of-stock inventory visibility
 - ✅ Role-based access control
 
 ### 🔒 Security Features
+
 - ✅ JWT-based authentication
 - ✅ Password hashing with bcryptjs
 - ✅ Backend price verification (prevents fraud)
-- ✅ Stock validation before orders
+- ✅ Backend checkout total calculation
+- ✅ Atomic stock reservation before orders
 - ✅ Role-based authorization middleware
 
 ---
@@ -102,20 +117,25 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ## 🛠️ **Tech Stack**
 
 ### **Frontend**
+
 - **Framework:** Next.js 16 (React 19, App Router)
 - **State Management:** Zustand (cart), Context API (auth)
 - **Styling:** CSS Modules
 - **HTTP Client:** Axios
+- **Realtime:** Socket.IO client
 - **Build Tool:** Next.js built-in
 
 ### **Backend**
+
 - **Runtime:** Node.js
 - **Server:** Express.js
+- **Realtime:** Socket.IO
 - **Database:** MongoDB with Mongoose
 - **Authentication:** JWT (JSON Web Tokens)
 - **Password:** bcryptjs
 
 ### **Deployment**
+
 - **Frontend Hosting:** Vercel
 - **Backend Hosting:** Render
 - **Database:** MongoDB Atlas or compatible MongoDB connection
@@ -168,6 +188,7 @@ e-commerce/
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
+
 - Node.js 18+ and npm
 - MongoDB (local or MongoDB Atlas)
 - Git
@@ -175,18 +196,21 @@ e-commerce/
 ### **Installation**
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/yourusername/e-commerce.git
 cd e-commerce
 ```
 
 2. **Install backend dependencies**
+
 ```bash
 cd server
 npm install
 ```
 
 3. **Install frontend dependencies**
+
 ```bash
 cd ../client
 npm install
@@ -194,18 +218,21 @@ npm install
 
 4. **Setup environment variables**
 
+Copy `server/.env.example` to `server/.env` and `client/.env.example` to `client/.env.local`.
+
 Create `server/.env`:
+
 ```env
 MONGO_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=your_jwt_secret_key_here
+JWT_SECRET=replace_with_a_secret_at_least_32_characters
 JWT_EXPIRE=1d
 NODE_ENV=development
 PORT=5000
-API_BASE_URL=http://localhost:5000
 CLIENT_URL=http://localhost:3000
 ```
 
 Create `client/.env.local`:
+
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
@@ -213,12 +240,14 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ### **Running Locally**
 
 **Terminal 1 - Backend (port 5000):**
+
 ```bash
 cd server
 npm start
 ```
 
 **Terminal 2 - Frontend (port 3000):**
+
 ```bash
 cd client
 npm run dev
@@ -231,12 +260,15 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 📚 **API Documentation**
 
 ### **Base URL**
+
 Production:
+
 ```
 https://cartify-backend-lg8z.onrender.com/api
 ```
 
 Local:
+
 ```
 http://localhost:5000/api
 ```
@@ -244,6 +276,7 @@ http://localhost:5000/api
 ### **Authentication Endpoints**
 
 #### Register User
+
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -256,6 +289,7 @@ Content-Type: application/json
 ```
 
 #### Login
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -267,6 +301,7 @@ Content-Type: application/json
 ```
 
 #### Get Current User
+
 ```http
 GET /api/auth/me
 Authorization: Bearer <token>
@@ -277,31 +312,79 @@ Authorization: Bearer <token>
 ### **Product Endpoints**
 
 #### Get All Products
+
 ```http
 GET /api/products
 ```
 
+Supports optional query parameters:
+
+```http
+GET /api/products?search=phone&category=accessories&minPrice=500&maxPrice=2000&sort=price_asc&page=1&limit=8
+```
+
+Query parameters:
+
+| Name       | Description                                                                   |
+| ---------- | ----------------------------------------------------------------------------- |
+| `search`   | Searches product name and description                                         |
+| `category` | Filters by exact category, case-insensitive                                   |
+| `minPrice` | Minimum product price                                                         |
+| `maxPrice` | Maximum product price                                                         |
+| `sort`     | One of `newest`, `oldest`, `price_asc`, `price_desc`, `name_asc`, `name_desc` |
+| `page`     | Page number, defaults to `1`                                                  |
+| `limit`    | Products per page, defaults to `8`, max `50`                                  |
+
+Response:
+
+```json
+{
+  "products": [],
+  "page": 1,
+  "limit": 8,
+  "totalPages": 3,
+  "totalProducts": 19,
+  "hasNextPage": true,
+  "hasPrevPage": false
+}
+```
+
 #### Get Product by ID
+
 ```http
 GET /api/products/:id
 ```
 
 #### Create Product (Admin only)
+
 ```http
 POST /api/products
-Authorization: Bearer <token>
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "name": "New Product",
+  "price": 49.99,
+  "description": "Product description",
+  "category": "accessories",
+  "stock": 50,
+  "image": "https://example.com/product-image.jpg"
+}
 ```
 
 #### Update Product (Admin only)
+
 ```http
 PUT /api/products/:id
-Authorization: Bearer <token>
+Authorization: Bearer <admin_token>
+Content-Type: application/json
 ```
 
 #### Delete Product (Admin only)
+
 ```http
 DELETE /api/products/:id
-Authorization: Bearer <token>
+Authorization: Bearer <admin_token>
 ```
 
 ---
@@ -309,34 +392,99 @@ Authorization: Bearer <token>
 ### **Order Endpoints**
 
 #### Create Order
+
 ```http
 POST /api/orders
 Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "orderItems": [
+    {
+      "product": "507f1f77bcf86cd799439011",
+      "quantity": 2
+    }
+  ],
+  "shippingInfo": {
+    "fullName": "John Doe",
+    "email": "user@example.com",
+    "phone": "+91 9876543210",
+    "addressLine1": "123 Main Street",
+    "addressLine2": "Apartment 4B",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "postalCode": "400001",
+    "country": "India"
+  },
+  "shippingMethod": "standard"
+}
 ```
 
+`shippingMethod` must be `standard` or `express`. The backend recalculates item prices, subtotal, shipping fee, platform fee, and final total.
+
 #### Get User's Orders
+
 ```http
-GET /api/orders
+GET /api/orders/my-orders
 Authorization: Bearer <token>
 ```
 
+#### Get All Orders (Admin only)
+
+```http
+GET /api/orders
+Authorization: Bearer <admin_token>
+```
+
 #### Get Order by ID
+
 ```http
 GET /api/orders/:id
 Authorization: Bearer <token>
 ```
 
 #### Update Order Status (Admin only)
+
 ```http
-PUT /api/orders/:id
-Authorization: Bearer <token>
+PUT /api/orders/:id/status
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "status": "shipped"
+}
 ```
+
+---
+
+### **Admin Dashboard Endpoints**
+
+#### Get Admin Dashboard Summary
+
+```http
+GET /api/admin/dashboard
+Authorization: Bearer <admin_token>
+```
+
+Response includes:
+
+- total products
+- total orders
+- non-cancelled order value
+- active orders
+- low-stock count
+- out-of-stock count
+- orders grouped by status
+- recent orders
+- low-stock product preview
+- out-of-stock product preview
 
 ---
 
 ## 🗄️ **Database Models**
 
 ### **User Schema**
+
 ```javascript
 {
   email: String (unique),
@@ -348,6 +496,7 @@ Authorization: Bearer <token>
 ```
 
 ### **Product Schema**
+
 ```javascript
 {
   name: String,
@@ -361,19 +510,36 @@ Authorization: Bearer <token>
 ```
 
 ### **Order Schema**
+
 ```javascript
 {
   user: ObjectId (ref: User),
-  items: [
+  orderItems: [
     {
       product: ObjectId (ref: Product),
-      quantity: Number,
-      price: Number (snapshot at purchase)
+      name: String,
+      price: Number,
+      quantity: Number
     }
   ],
+  shippingInfo: {
+    fullName: String,
+    email: String,
+    phone: String,
+    addressLine1: String,
+    addressLine2: String,
+    city: String,
+    state: String,
+    postalCode: String,
+    country: String
+  },
+  shippingMethod: String ("standard" | "express"),
+  subtotal: Number,
+  shippingFee: Number,
+  platformFee: Number,
+  totalItems: Number,
   totalPrice: Number,
-  status: String ("pending" | "processing" | "shipped" | "delivered"),
-  shippingAddress: String,
+  status: String ("placed" | "processing" | "shipped" | "delivered" | "cancelled"),
   createdAt: Date,
   updatedAt: Date
 }
@@ -383,10 +549,10 @@ Authorization: Bearer <token>
 
 ## 🔐 **Security Features**
 
-- ✅ JWT authentication with 24-hour expiration
+- ✅ JWT authentication with configurable expiration through `JWT_EXPIRE`
 - ✅ Password hashing with bcryptjs (10 salt rounds)
 - ✅ Backend price recalculation on orders
-- ✅ Stock validation before order creation
+- ✅ Atomic stock reservation before order creation
 - ✅ Input validation on both frontend & backend
 - ✅ Role-based authorization middleware
 
@@ -395,35 +561,43 @@ Authorization: Bearer <token>
 ## 📝 **Environment Variables**
 
 ### **Server (.env)**
+
+Copy `server/.env.example` to `server/.env` for local development.
+
 Production on Render:
+
 ```env
 MONGO_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=your_secret_key_here
+JWT_SECRET=replace_with_a_secret_at_least_32_characters
 JWT_EXPIRE=1d
 NODE_ENV=production
 PORT=5000
-API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ```
 
 Local development:
+
 ```env
 MONGO_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=your_secret_key_here
+JWT_SECRET=replace_with_a_secret_at_least_32_characters
 JWT_EXPIRE=1d
 NODE_ENV=development
 PORT=5000
-API_BASE_URL=http://localhost:5000
 CLIENT_URL=http://localhost:3000
 ```
 
 ### **Client (.env.local)**
+
+Copy `client/.env.example` to `client/.env.local` for local development.
+
 Production on Vercel:
+
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
 Local development:
+
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
@@ -434,6 +608,8 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 
 - [Frontend README](client/README.md) - Next.js client setup & features
 - [Backend README](server/README.md) - Express API documentation
+- [Phase 3 Roadmap](docs/cartify-phase-3-roadmap.md) - Remaining post-Phase 2 work
+- [Admin Setup](docs/admin-setup.md) - How to create an admin user
 
 ---
 
@@ -465,9 +641,8 @@ Contributions are welcome! Please follow these steps:
 - [ ] Wishlist feature
 - [ ] Payment integration (Stripe)
 - [ ] Email notifications
-- [ ] Comprehensive test suite
 - [ ] API documentation (Swagger)
 
 ---
 
-**Last Updated:** May 31, 2026
+**Last Updated:** June 7, 2026

@@ -1,6 +1,6 @@
 .page {
   max-width: 980px;
-  margin: 56px auto;
+  margin: 48px auto;
   padding: 0 24px 60px;
   color: var(--foreground);
 }
@@ -17,6 +17,7 @@
 .backLink {
   color: var(--primary);
   font-weight: 700;
+  font-size: 14px;
 }
 
 .title,
@@ -33,14 +34,18 @@
 
 .error {
   color: #b91c1c;
+  background: var(--danger-soft);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 12px 16px;
 }
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   padding: 22px;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   display: grid;
   gap: 24px;
 }
@@ -52,6 +57,7 @@
 
 .sectionTitle {
   font-size: 1.15rem;
+  margin: 0;
 }
 
 .row {
@@ -69,11 +75,21 @@
 
 .item {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius);
   padding: 16px;
   background: #f8fafc;
   display: grid;
   gap: 8px;
+}
+
+.liveMessage {
+  width: fit-content;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--success-soft);
+  color: #047857;
+  font-weight: 700;
 }
 
 @media (min-width: 640px) {

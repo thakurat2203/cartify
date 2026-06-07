@@ -12,7 +12,6 @@ import {
 import styles from "./page.module.css";
 
 export default function RegisterPage() {
-  // Local state for form fields and UI feedback
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -22,18 +21,15 @@ export default function RegisterPage() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Authentication and routing logic
   const { register, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect to home if user is already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       router.push("/");
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Update local state when user types
   const handleChange = (e) => {
     setForm((prev) => ({
       ...prev,
@@ -44,7 +40,7 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // 1. Client-side input validation
+    // Client validation mirrors the backend and adds password confirmation.
     const nameValidation = validateName(form.name);
     if (!nameValidation.valid) {
       setMessage(nameValidation.error);
@@ -63,7 +59,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // Ensure password confirmation matches
     if (form.password !== form.confirmPassword) {
       setMessage("Passwords do not match.");
       return;
@@ -73,14 +68,12 @@ export default function RegisterPage() {
       setSubmitting(true);
       setMessage("");
 
-      // 2. Submit data to the backend via Auth Context
       await register({
         name: form.name,
         email: form.email,
         password: form.password,
       });
 
-      // 3. Clear form and move to login screen
       setForm({
         name: "",
         email: "",
@@ -90,7 +83,6 @@ export default function RegisterPage() {
 
       router.push("/login");
     } catch (err) {
-      // 4. Handle registration errors
       const apiMessage =
         err.response?.data?.message || err.message || "Registration failed";
       setMessage(apiMessage);
@@ -101,7 +93,6 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.page}>
-      {/* Navigation header */}
       <div className={styles.backRow}>
         <Link href="/" className={styles.backLink}>
           Back to catalog
@@ -116,7 +107,6 @@ export default function RegisterPage() {
           Create your account to continue shopping.
         </p>
 
-        {/* User registration form */}
         <form onSubmit={handleRegister} className={styles.form}>
           <div className={styles.field}>
             <label htmlFor="name">Full name</label>
@@ -173,7 +163,6 @@ export default function RegisterPage() {
             {submitting ? "Creating..." : "Create account"}
           </button>
 
-          {/* Result message */}
           {message && <p className={styles.message}>{message}</p>}
         </form>
 

@@ -1,6 +1,6 @@
 .page {
   max-width: 520px;
-  margin: 80px auto;
+  margin: 64px auto;
   padding: 0 24px;
   min-height: 100vh;
   display: flex;
@@ -25,11 +25,11 @@
 }
 
 .card {
-  padding: 40px;
+  padding: 36px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow);
   animation: slideUp 0.4s ease-out;
 }
 
@@ -115,7 +115,7 @@
 
 .submitButton {
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius);
   padding: 12px 20px;
   background: var(--primary);
   color: #fff;
@@ -131,7 +131,7 @@
 
 .submitButton:hover:not(:disabled) {
   background: var(--primary-dark);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
   transform: translateY(-2px);
 }
 
@@ -153,6 +153,8 @@
   padding: 12px 14px;
   border-radius: var(--radius);
   border-left: 4px solid;
+  background: var(--warning-soft);
+  color: #92400e;
   font-weight: 500;
   font-size: 13px;
   animation: slideIn 0.3s ease-out;
@@ -171,7 +173,7 @@
 
 @media (max-width: 640px) {
   .page {
-    margin: 60px auto;
+    margin: 44px auto;
   }
 
   .card {

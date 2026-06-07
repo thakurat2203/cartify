@@ -7,12 +7,9 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import styles from "./page.module.css";
 
-// Backend API URL
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
-// Valid order lifecycle stages
-// Available order statuses for admin management
 const ORDER_STATUSES = [
   "placed",
   "processing",
@@ -24,19 +21,26 @@ const ORDER_STATUSES = [
 const formatStatus = (status) =>
   status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
 
+const formatShippingMethod = (method) => {
+  if (method === "express") {
+    return "Express delivery";
+  }
+
+  return "Standard delivery";
+};
+
 export default function AdminOrderDetailsPage({ params }) {
   const { id } = use(params);
   const { user, token, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // Local state for order data and management
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Auth and Authorization check: Only admins can view this page
+    // Admin screens must wait for auth hydration before enforcing role access.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
@@ -47,7 +51,6 @@ export default function AdminOrderDetailsPage({ params }) {
       return;
     }
 
-    // Fetch order details from backend
     const loadOrder = async () => {
       try {
         const response = await axios.get(`${API_BASE}/api/orders/${id}`, {
@@ -71,7 +74,7 @@ export default function AdminOrderDetailsPage({ params }) {
     }
   }, [authLoading, id, isAuthenticated, router, token, user]);
 
-  // Handle status selection changes
+  // The dropdown edits local state first; the update button persists the selected status.
   const handleStatusChange = (e) => {
     setOrder((prev) => ({
       ...prev,
@@ -79,7 +82,6 @@ export default function AdminOrderDetailsPage({ params }) {
     }));
   };
 
-  // Save the updated status to the database
   const handleStatusUpdate = async () => {
     try {
       setSaving(true);
@@ -106,7 +108,6 @@ export default function AdminOrderDetailsPage({ params }) {
     }
   };
 
-  // Loading view
   if (authLoading || loading) {
     return (
       <div className={styles.page}>
@@ -184,9 +185,23 @@ export default function AdminOrderDetailsPage({ params }) {
                 <span className={styles.value}>{order.shippingInfo.email}</span>
               </p>
               <p className={styles.row}>
+                <strong className={styles.label}>Phone:</strong>
+                <span className={styles.value}>{order.shippingInfo.phone}</span>
+              </p>
+              <p className={styles.row}>
                 <strong className={styles.label}>Address:</strong>
                 <span className={styles.value}>
-                  {order.shippingInfo.address}
+                  {order.shippingInfo.addressLine1}
+                  {order.shippingInfo.addressLine2 &&
+                    `, ${order.shippingInfo.addressLine2}`}
+                  , {order.shippingInfo.city}, {order.shippingInfo.state}{" "}
+                  {order.shippingInfo.postalCode}, {order.shippingInfo.country}
+                </span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Shipping:</strong>
+                <span className={styles.value}>
+                  {formatShippingMethod(order.shippingMethod)}
                 </span>
               </p>
             </div>
@@ -212,6 +227,18 @@ export default function AdminOrderDetailsPage({ params }) {
               <p className={styles.row}>
                 <strong className={styles.label}>Total items:</strong>
                 <span className={styles.value}>{order.totalItems}</span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Subtotal:</strong>
+                <span className={styles.value}>Rs. {order.subtotal}</span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Shipping fee:</strong>
+                <span className={styles.value}>Rs. {order.shippingFee}</span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Platform fee:</strong>
+                <span className={styles.value}>Rs. {order.platformFee}</span>
               </p>
               <p className={styles.row}>
                 <strong className={styles.label}>Total price:</strong>

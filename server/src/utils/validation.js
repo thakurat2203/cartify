@@ -1,4 +1,4 @@
-// Backend validation utilities
+// Keep these rules aligned with client/src/utils/validation.js.
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordMinLength = 8;
@@ -9,10 +9,21 @@ const productNameMaxLength = 200;
 const categoryMinLength = 1;
 const categoryMaxLength = 50;
 const descriptionMaxLength = 1000;
-const addressMinLength = 10;
-const addressMaxLength = 500;
+const imageUrlMaxLength = 500;
+const phoneMinLength = 7;
+const phoneMaxLength = 20;
+const addressLineMinLength = 5;
+const addressLineMaxLength = 200;
+const cityMinLength = 2;
+const cityMaxLength = 80;
+const stateMinLength = 2;
+const stateMaxLength = 80;
+const postalCodeMinLength = 3;
+const postalCodeMaxLength = 20;
+const countryMinLength = 2;
+const countryMaxLength = 80;
+const allowedShippingMethods = ["standard", "express"];
 
-// Email validation
 const validateEmail = (email) => {
   if (!email || typeof email !== "string") {
     return { valid: false, error: "Email is required" };
@@ -24,7 +35,6 @@ const validateEmail = (email) => {
   return { valid: true };
 };
 
-// Password validation
 const validatePassword = (password) => {
   if (!password || typeof password !== "string") {
     return { valid: false, error: "Password is required" };
@@ -38,7 +48,6 @@ const validatePassword = (password) => {
   return { valid: true };
 };
 
-// User name validation
 const validateName = (name) => {
   if (!name || typeof name !== "string") {
     return { valid: false, error: "Name is required" };
@@ -59,7 +68,6 @@ const validateName = (name) => {
   return { valid: true };
 };
 
-// Product name validation
 const validateProductName = (name) => {
   if (!name || typeof name !== "string") {
     return { valid: false, error: "Product name is required" };
@@ -80,7 +88,6 @@ const validateProductName = (name) => {
   return { valid: true };
 };
 
-// Price validation
 const validatePrice = (price) => {
   if (price === undefined || price === null || price === "") {
     return { valid: false, error: "Price is required" };
@@ -92,7 +99,6 @@ const validatePrice = (price) => {
   return { valid: true };
 };
 
-// Stock validation
 const validateStock = (stock) => {
   if (stock === undefined || stock === null || stock === "") {
     return { valid: false, error: "Stock is required" };
@@ -104,7 +110,6 @@ const validateStock = (stock) => {
   return { valid: true };
 };
 
-// Category validation
 const validateCategory = (category) => {
   if (!category || typeof category !== "string") {
     return { valid: false, error: "Category is required" };
@@ -125,7 +130,6 @@ const validateCategory = (category) => {
   return { valid: true };
 };
 
-// Description validation
 const validateDescription = (description) => {
   if (!description) {
     return { valid: true }; // Optional field
@@ -142,24 +146,187 @@ const validateDescription = (description) => {
   return { valid: true };
 };
 
-// Shipping address validation
-const validateAddress = (address) => {
-  if (!address || typeof address !== "string") {
-    return { valid: false, error: "Address is required" };
+const validateImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    return { valid: true };
   }
-  const trimmed = address.trim();
-  if (trimmed.length < addressMinLength) {
+
+  if (typeof imageUrl !== "string") {
+    return { valid: false, error: "Image URL must be text" };
+  }
+
+  const trimmed = imageUrl.trim();
+
+  if (trimmed.length > imageUrlMaxLength) {
     return {
       valid: false,
-      error: `Address must be at least ${addressMinLength} characters`,
+      error: `Image URL must not exceed ${imageUrlMaxLength} characters`,
     };
   }
-  if (trimmed.length > addressMaxLength) {
+
+  try {
+    const url = new URL(trimmed);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      return { valid: false, error: "Image URL must start with http or https" };
+    }
+
+    return { valid: true };
+  } catch {
+    return { valid: false, error: "Image URL must be a valid URL" };
+  }
+};
+
+const validatePhone = (phone) => {
+  if (!phone || typeof phone !== "string") {
+    return { valid: false, error: "Phone number is required" };
+  }
+
+  const trimmed = phone.trim();
+
+  if (trimmed.length < phoneMinLength) {
     return {
       valid: false,
-      error: `Address must not exceed ${addressMaxLength} characters`,
+      error: `Phone number must be at least ${phoneMinLength} characters`,
     };
   }
+
+  if (trimmed.length > phoneMaxLength) {
+    return {
+      valid: false,
+      error: `Phone number must not exceed ${phoneMaxLength} characters`,
+    };
+  }
+
+  if (!/^[0-9+\-\s()]+$/.test(trimmed)) {
+    return {
+      valid: false,
+      error:
+        "Phone number can only contain numbers, spaces, +, -, and parentheses",
+    };
+  }
+
+  return { valid: true };
+};
+
+const validateAddressLine = (addressLine, required = true) => {
+  if (!addressLine) {
+    return required
+      ? { valid: false, error: "Address line 1 is required" }
+      : { valid: true };
+  }
+
+  if (typeof addressLine !== "string") {
+    return { valid: false, error: "Address line must be text" };
+  }
+
+  const trimmed = addressLine.trim();
+
+  if (required && trimmed.length < addressLineMinLength) {
+    return {
+      valid: false,
+      error: `Address line must be at least ${addressLineMinLength} characters`,
+    };
+  }
+
+  if (trimmed.length > addressLineMaxLength) {
+    return {
+      valid: false,
+      error: `Address line must not exceed ${addressLineMaxLength} characters`,
+    };
+  }
+
+  return { valid: true };
+};
+
+const validateCity = (city) => {
+  if (!city || typeof city !== "string") {
+    return { valid: false, error: "City is required" };
+  }
+
+  const trimmed = city.trim();
+
+  if (trimmed.length < cityMinLength || trimmed.length > cityMaxLength) {
+    return {
+      valid: false,
+      error: `City must be between ${cityMinLength} and ${cityMaxLength} characters`,
+    };
+  }
+
+  return { valid: true };
+};
+
+const validateState = (state) => {
+  if (!state || typeof state !== "string") {
+    return { valid: false, error: "State is required" };
+  }
+
+  const trimmed = state.trim();
+
+  if (trimmed.length < stateMinLength || trimmed.length > stateMaxLength) {
+    return {
+      valid: false,
+      error: `State must be between ${stateMinLength} and ${stateMaxLength} characters`,
+    };
+  }
+
+  return { valid: true };
+};
+
+const validatePostalCode = (postalCode) => {
+  if (!postalCode || typeof postalCode !== "string") {
+    return { valid: false, error: "Postal code is required" };
+  }
+
+  const trimmed = postalCode.trim();
+
+  if (
+    trimmed.length < postalCodeMinLength ||
+    trimmed.length > postalCodeMaxLength
+  ) {
+    return {
+      valid: false,
+      error: `Postal code must be between ${postalCodeMinLength} and ${postalCodeMaxLength} characters`,
+    };
+  }
+
+  if (!/^[a-zA-Z0-9\s-]+$/.test(trimmed)) {
+    return {
+      valid: false,
+      error:
+        "Postal code can only contain letters, numbers, spaces, and hyphens",
+    };
+  }
+
+  return { valid: true };
+};
+
+const validateCountry = (country) => {
+  if (!country || typeof country !== "string") {
+    return { valid: false, error: "Country is required" };
+  }
+
+  const trimmed = country.trim();
+
+  if (trimmed.length < countryMinLength || trimmed.length > countryMaxLength) {
+    return {
+      valid: false,
+      error: `Country must be between ${countryMinLength} and ${countryMaxLength} characters`,
+    };
+  }
+
+  return { valid: true };
+};
+
+const validateShippingMethod = (shippingMethod) => {
+  if (!shippingMethod || typeof shippingMethod !== "string") {
+    return { valid: false, error: "Shipping method is required" };
+  }
+
+  if (!allowedShippingMethods.includes(shippingMethod)) {
+    return { valid: false, error: "Invalid shipping method" };
+  }
+
   return { valid: true };
 };
 
@@ -172,7 +339,7 @@ module.exports = {
   validateStock,
   validateCategory,
   validateDescription,
-  validateAddress,
+  validateImageUrl,
   passwordMinLength,
   nameMinLength,
   nameMaxLength,
@@ -181,6 +348,25 @@ module.exports = {
   categoryMinLength,
   categoryMaxLength,
   descriptionMaxLength,
-  addressMinLength,
-  addressMaxLength,
+  imageUrlMaxLength,
+  validatePhone,
+  validateAddressLine,
+  validateCity,
+  validateState,
+  validatePostalCode,
+  validateCountry,
+  validateShippingMethod,
+  phoneMinLength,
+  phoneMaxLength,
+  addressLineMinLength,
+  addressLineMaxLength,
+  cityMinLength,
+  cityMaxLength,
+  stateMinLength,
+  stateMaxLength,
+  postalCodeMinLength,
+  postalCodeMaxLength,
+  countryMinLength,
+  countryMaxLength,
+  allowedShippingMethods,
 };

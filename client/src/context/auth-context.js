@@ -3,15 +3,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
-// API configuration and storage keys
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 const TOKEN_KEY = "auth_token";
 
-// Create context for authentication state
 const AuthContext = createContext(null);
 
-// Fetch current user details from backend using token
 async function fetchCurrentUser(authToken) {
   const response = await axios.get(`${API_BASE}/api/auth/me`, {
     headers: {
@@ -27,7 +24,6 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Restore session from localStorage on application mount
   useEffect(() => {
     const restoreSession = async () => {
       const storedToken = localStorage.getItem(TOKEN_KEY);
@@ -38,6 +34,7 @@ export function AuthProvider({ children }) {
       }
 
       try {
+        // Revalidate the stored token before trusting it as the active session.
         const currentUser = await fetchCurrentUser(storedToken);
         setToken(storedToken);
         setUser(currentUser);
@@ -53,8 +50,8 @@ export function AuthProvider({ children }) {
     restoreSession();
   }, []);
 
-  // Register a new user account
   const register = async ({ name, email, password }) => {
+    // Registration returns the created user; login still happens on the login page.
     const response = await axios.post(`${API_BASE}/api/auth/register`, {
       name,
       email,
@@ -64,8 +61,8 @@ export function AuthProvider({ children }) {
     return response.data;
   };
 
-  // Log in an existing user and persist the session
   const login = async ({ email, password }) => {
+    // After successful login, persist the token so refreshes can restore the session.
     const response = await axios.post(`${API_BASE}/api/auth/login`, {
       email,
       password,
@@ -79,14 +76,13 @@ export function AuthProvider({ children }) {
     return response.data;
   };
 
-  // Log out the current user and clear stored tokens
   const logout = () => {
+    // Clearing both storage and state immediately updates protected navigation.
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
   };
 
-  // Provide state and methods to the rest of the app
   const value = {
     user,
     token,
@@ -100,7 +96,6 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Hook to access auth state from any component
 export function useAuth() {
   const context = useContext(AuthContext);
 

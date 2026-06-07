@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const config = require("../config");
 const User = require("../models/User");
 const createError = require("../utils/createError");
 const {
@@ -9,7 +10,6 @@ const {
 } = require("../utils/validation");
 
 class AuthService {
-  // Register user
   async registerUser(name, email, password) {
     const nameValidation = validateName(name);
     if (!nameValidation.valid) {
@@ -40,10 +40,14 @@ class AuthService {
       password: hashedPassword,
     });
 
-    return { id: user._id, name: user.name, email: user.email, role: user.role };
+    return {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
   }
 
-  // Login user
   async loginUser(email, password) {
     const emailValidation = validateEmail(email);
     if (!emailValidation.valid) {
@@ -57,7 +61,8 @@ class AuthService {
     const user = await User.findOne({
       email: email.trim().toLowerCase(),
     });
-    
+
+    // Use one generic response so login cannot reveal whether an email exists.
     if (!user) {
       throw createError("Invalid credentials", 401);
     }
@@ -72,17 +77,21 @@ class AuthService {
         userId: user._id,
         role: user.role,
       },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      config.jwtSecret,
+      { expiresIn: config.jwtExpire },
     );
 
     return {
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 
-  // Get current profile
   async getMe(userId) {
     const user = await User.findById(userId).select("-password");
 
@@ -93,5 +102,4 @@ class AuthService {
   }
 }
 
-// Export a single instance so all code uses the same service
 module.exports = new AuthService();

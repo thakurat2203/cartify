@@ -5,12 +5,8 @@ import { useAuth } from "@/context/auth-context";
 import { getCartTotals, useCartStore } from "@/store/cart-store";
 import styles from "./site-header.module.css";
 
-/**
- * SiteHeader provides the global navigation bar, including branding,
- * cart status, and user-specific authentication links.
- */
 export default function SiteHeader() {
-  // Retrieve cart state from Zustand and auth state from context
+  // Header reads shared cart/auth state to keep navigation in sync everywhere.
   const cart = useCartStore((state) => state.cart);
   const cartReady = useCartStore((state) => state.cartReady);
   const { totalItems } = getCartTotals(cart);
@@ -19,26 +15,24 @@ export default function SiteHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        {/* Main Branding Link */}
         <Link href="/" className={styles.brand}>
-          🛒 Cartify
+          Cartify
         </Link>
 
         <nav className={styles.nav}>
           <Link href="/">Catalog</Link>
-          {/* Display cart count only when client-side storage is ready */}
           <Link href="/cart">Cart ({cartReady ? totalItems : "..."})</Link>
 
+          {/* Avoid showing guest/admin links until the stored session has been checked. */}
           {authLoading ? (
             <span className={styles.userPill}>Checking session...</span>
           ) : isAuthenticated ? (
             <>
-              {/* Regular Customer Links */}
               <Link href="/orders">My Orders</Link>
-              
-              {/* Admin-Only Management Links */}
+
               {user?.role === "admin" && (
                 <>
+                  <Link href="/admin">Admin Dashboard</Link>
                   <Link href="/admin/products">Admin Products</Link>
                   <Link href="/admin/orders">Admin Orders</Link>
                 </>
@@ -55,7 +49,6 @@ export default function SiteHeader() {
             </>
           ) : (
             <>
-              {/* Guest Access Links */}
               <Link href="/login">Login</Link>
               <Link href="/register" className={styles.registerLink}>
                 Register

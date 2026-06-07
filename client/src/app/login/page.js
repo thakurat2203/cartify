@@ -18,7 +18,7 @@ export default function LoginPage() {
   const { login, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // If user is already logged in, redirect to home
+  // Already-authenticated users should not stay on the login screen.
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       router.push("/");
@@ -35,14 +35,13 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Validate email
+    // Keep client validation aligned with backend auth rules.
     const emailValidation = validateEmail(form.email);
     if (!emailValidation.valid) {
       setMessage(emailValidation.error);
       return;
     }
 
-    // Validate password
     const passwordValidation = validatePassword(form.password);
     if (!passwordValidation.valid) {
       setMessage(passwordValidation.error);
@@ -53,7 +52,6 @@ export default function LoginPage() {
       setSubmitting(true);
       setMessage("");
 
-      // Execute login request via Auth Context
       await login({
         email: form.email,
         password: form.password,

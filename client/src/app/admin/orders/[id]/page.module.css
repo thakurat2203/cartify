@@ -1,6 +1,6 @@
 .page {
   max-width: 900px;
-  margin: 56px auto;
+  margin: 48px auto;
   padding: 0 24px 40px;
   color: var(--foreground);
 }
@@ -35,7 +35,7 @@
   display: inline-block;
   width: fit-content;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 700;
 }
@@ -67,10 +67,10 @@
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   padding: 24px;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   display: grid;
   gap: 24px;
 }
@@ -98,9 +98,9 @@
 
 .item {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius);
   padding: 16px;
-  background: #f8fafc;
+  background: var(--surface-muted);
   display: grid;
   gap: 8px;
 }
@@ -114,14 +114,14 @@
 .select {
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: #fff;
   color: var(--foreground);
 }
 
 .submitButton {
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 10px 16px;
   background: var(--primary);
   color: #f8fafc;
@@ -130,7 +130,7 @@
 }
 
 .submitButton:hover {
-  background: #1d4ed8;
+  background: var(--primary-dark);
 }
 
 .submitButton:disabled {

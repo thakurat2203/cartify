@@ -9,15 +9,39 @@ import { useAuth } from "@/context/auth-context";
 import {
   validateName,
   validateEmail,
-  validateAddress,
+  validatePhone,
+  validateAddressLine,
+  validateCity,
+  validateState,
+  validatePostalCode,
+  validateCountry,
+  validateShippingMethod,
 } from "@/utils/validation";
 import styles from "./page.module.css";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
+const shippingOptions = [
+  { value: "standard", label: "Standard delivery", fee: 49 },
+  { value: "express", label: "Express delivery", fee: 149 },
+];
+
+const platformFee = 10;
+
+const initialFormState = {
+  fullName: "",
+  email: "",
+  phone: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "",
+};
+
 export default function CheckoutPage() {
-  // Access cart and auth context state
   const cart = useCartStore((state) => state.cart);
   const cartReady = useCartStore((state) => state.cartReady);
   const clearCart = useCartStore((state) => state.clearCart);
@@ -25,23 +49,29 @@ export default function CheckoutPage() {
   const { isAuthenticated, authLoading, token } = useAuth();
   const router = useRouter();
 
-  // Local state for shipping form and feedback messages
-  const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    address: "",
-  });
+  const [form, setForm] = useState(initialFormState);
+  const [shippingMethod, setShippingMethod] = useState("standard");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Security: Redirect users to login if they are not authenticated
+  const selectedShippingOption =
+    shippingOptions.find((option) => option.value === shippingMethod) ||
+    shippingOptions[0];
+  const checkoutTotal = totalPrice + selectedShippingOption.fee + platformFee;
+
+  const stockIssue = cart.find((item) => {
+    const availableStock = Number(item.stock);
+
+    return Number.isInteger(availableStock) && item.quantity > availableStock;
+  });
+
+  // Checkout must wait for auth hydration before deciding whether to redirect.
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Prevent UI flickering while auth or cart persistence is resolving
   if (authLoading || !cartReady) {
     return (
       <div className={styles.page}>
@@ -57,7 +87,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Generic change handler for form inputs
   const handleChange = (e) => {
     setForm((prev) => ({
       ...prev,
@@ -65,32 +94,44 @@ export default function CheckoutPage() {
     }));
   };
 
-  // Main order placement logic
+  const handleShippingMethodChange = (e) => {
+    setShippingMethod(e.target.value);
+  };
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
-    // 1. Client-side form validation
-    const nameValidation = validateName(form.fullName);
-    if (!nameValidation.valid) {
-      setMessage(nameValidation.error);
+    // Client validation mirrors the backend before sending the order.
+    const validations = [
+      validateName(form.fullName),
+      validateEmail(form.email),
+      validatePhone(form.phone),
+      validateAddressLine(form.addressLine1),
+      validateAddressLine(form.addressLine2, false),
+      validateCity(form.city),
+      validateState(form.state),
+      validatePostalCode(form.postalCode),
+      validateCountry(form.country),
+      validateShippingMethod(shippingMethod),
+    ];
+
+    const failedValidation = validations.find(
+      (validation) => !validation.valid,
+    );
+    if (failedValidation) {
+      setMessage(failedValidation.error);
       return;
     }
 
-    const emailValidation = validateEmail(form.email);
-    if (!emailValidation.valid) {
-      setMessage(emailValidation.error);
-      return;
-    }
-
-    const addressValidation = validateAddress(form.address);
-    if (!addressValidation.valid) {
-      setMessage(addressValidation.error);
-      return;
-    }
-
-    // 2. Ensure cart is not empty before submitting
     if (cart.length === 0) {
       setMessage("Your cart is empty.");
+      return;
+    }
+
+    if (stockIssue) {
+      setMessage(
+        `${stockIssue.name} only has ${stockIssue.stock} item(s) available.`,
+      );
       return;
     }
 
@@ -98,13 +139,12 @@ export default function CheckoutPage() {
       setSubmitting(true);
       setMessage("");
 
-      // 3. Prepare order payload from cart items
+      // Only send product id and quantity; backend owns prices and totals.
       const orderItems = cart.map((item) => ({
         product: item.id,
         quantity: item.quantity,
       }));
 
-      // 4. Send creation request to backend with auth token
       const response = await axios.post(
         `${API_BASE}/api/orders`,
         {
@@ -112,8 +152,15 @@ export default function CheckoutPage() {
           shippingInfo: {
             fullName: form.fullName,
             email: form.email,
-            address: form.address,
+            phone: form.phone,
+            addressLine1: form.addressLine1,
+            addressLine2: form.addressLine2,
+            city: form.city,
+            state: form.state,
+            postalCode: form.postalCode,
+            country: form.country,
           },
+          shippingMethod,
         },
         {
           headers: {
@@ -124,17 +171,12 @@ export default function CheckoutPage() {
 
       const createdOrder = response.data.order;
 
-      // 5. Success cleanup: clear cart and redirect to order details
       clearCart();
-      setForm({
-        fullName: "",
-        email: "",
-        address: "",
-      });
+      setForm(initialFormState);
+      setShippingMethod("standard");
 
       router.push(`/orders/${createdOrder._id}`);
     } catch (err) {
-      // Handle API errors gracefully
       const apiMessage =
         err.response?.data?.message || err.message || "Failed to place order";
       setMessage(apiMessage);
@@ -154,7 +196,6 @@ export default function CheckoutPage() {
       <h1 className={styles.title}>Checkout</h1>
 
       <div className={styles.grid}>
-        {/* Shipping Information Form */}
         <form onSubmit={handlePlaceOrder} className={styles.form}>
           <div className={styles.field}>
             <label htmlFor="fullName">Full name</label>
@@ -172,6 +213,7 @@ export default function CheckoutPage() {
             <input
               id="email"
               name="email"
+              type="email"
               value={form.email}
               onChange={handleChange}
               className={styles.input}
@@ -179,33 +221,142 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="address">Address</label>
-            <textarea
-              id="address"
-              name="address"
-              value={form.address}
+            <label htmlFor="phone">Phone</label>
+            <input
+              id="phone"
+              name="phone"
+              value={form.phone}
               onChange={handleChange}
-              rows="4"
-              className={styles.textarea}
+              className={styles.input}
             />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="addressLine1">Address line 1</label>
+            <input
+              id="addressLine1"
+              name="addressLine1"
+              value={form.addressLine1}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="addressLine2">Address line 2</label>
+            <input
+              id="addressLine2"
+              name="addressLine2"
+              value={form.addressLine2}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="city">City</label>
+            <input
+              id="city"
+              name="city"
+              value={form.city}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="state">State</label>
+            <input
+              id="state"
+              name="state"
+              value={form.state}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="postalCode">Postal code</label>
+            <input
+              id="postalCode"
+              name="postalCode"
+              value={form.postalCode}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="country">Country</label>
+            <input
+              id="country"
+              name="country"
+              value={form.country}
+              onChange={handleChange}
+              className={styles.input}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="shippingMethod">Shipping method</label>
+            <select
+              id="shippingMethod"
+              value={shippingMethod}
+              onChange={handleShippingMethodChange}
+              className={styles.input}
+            >
+              {shippingOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label} - Rs. {option.fee}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button
             type="submit"
             className={styles.submitButton}
-            disabled={submitting}
+            disabled={submitting || Boolean(stockIssue)}
           >
             {submitting ? "Placing order..." : "Place order"}
           </button>
 
+          {stockIssue && (
+            <p className={styles.message}>
+              Update your cart quantity before placing this order.
+            </p>
+          )}
+
           {message && <p className={styles.message}>{message}</p>}
         </form>
 
-        {/* Static Order Summary */}
         <aside className={styles.summary}>
           <h2 className={styles.summaryTitle}>Order summary</h2>
-          <p>Total items: {totalItems}</p>
-          <p>Total price: Rs. {totalPrice}</p>
+
+          <div className={styles.summaryItem}>
+            <span>Total items</span>
+            <span>{totalItems}</span>
+          </div>
+
+          <div className={styles.summaryItem}>
+            <span>Subtotal</span>
+            <span>Rs. {totalPrice}</span>
+          </div>
+
+          <div className={styles.summaryItem}>
+            <span>Shipping</span>
+            <span>Rs. {selectedShippingOption.fee}</span>
+          </div>
+
+          <div className={styles.summaryItem}>
+            <span>Platform fee</span>
+            <span>Rs. {platformFee}</span>
+          </div>
+
+          <div className={styles.summaryTotal}>
+            <span>Total</span>
+            <span>Rs. {checkoutTotal}</span>
+          </div>
         </aside>
       </div>
     </div>

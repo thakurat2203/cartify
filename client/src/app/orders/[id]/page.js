@@ -4,33 +4,42 @@ import axios from "axios";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
 import { useAuth } from "@/context/auth-context";
 import styles from "./page.module.css";
 
-// Backend API base URL
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
+const formatShippingMethod = (method) => {
+  if (method === "express") {
+    return "Express delivery";
+  }
+
+  return "Standard delivery";
+};
+
+const formatStatus = (status) =>
+  status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
+
 export default function OrderDetailsPage({ params }) {
-  // Extract the order ID from the dynamic route parameters
   const { id } = use(params);
-  // Access auth state for token-based API requests
   const { token, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
-  // State management for order data and UI feedback
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [liveMessage, setLiveMessage] = useState("");
+  const orderLoaded = Boolean(order?._id);
 
   useEffect(() => {
-    // Redirect to login if user is not authenticated
+    // Wait for auth hydration before redirecting or fetching this protected order.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
     }
 
-    // Load order data from server using the ID and auth token
     const loadOrder = async () => {
       try {
         const response = await axios.get(`${API_BASE}/api/orders/${id}`, {
@@ -42,22 +51,64 @@ export default function OrderDetailsPage({ params }) {
         setOrder(response.data.order);
       } catch (err) {
         const apiMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to load order";
+          err.response?.data?.message || err.message || "Failed to load order";
         setError(apiMessage);
       } finally {
         setLoading(false);
       }
     };
 
-    // Trigger load if required identifiers are present
     if (token && id) {
       loadOrder();
     }
   }, [authLoading, id, isAuthenticated, router, token]);
 
-  // Display loading state during initial checks or fetch
+  useEffect(() => {
+    if (!token || !id || !orderLoaded) {
+      return;
+    }
+
+    const socket = io(API_BASE, {
+      transports: ["websocket"],
+    });
+
+    socket.emit("order:join", {
+      orderId: id,
+      token,
+    });
+
+    socket.on("order:status-updated", (data) => {
+      if (data.orderId !== id) {
+        return;
+      }
+
+      setOrder((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          status: data.status,
+          updatedAt: data.updatedAt,
+        };
+      });
+
+      setLiveMessage(`Live update: order is now ${formatStatus(data.status)}.`);
+    });
+
+    socket.on("order:error", (message) => {
+      setLiveMessage(message);
+    });
+
+    return () => {
+      socket.emit("order:leave", {
+        orderId: id,
+      });
+      socket.disconnect();
+    };
+  }, [id, orderLoaded, token]);
+
   if (authLoading || loading) {
     return (
       <div className={styles.page}>
@@ -80,12 +131,10 @@ export default function OrderDetailsPage({ params }) {
 
         <h1 className={styles.title}>Order Details</h1>
 
-        {/* Error notification */}
         {error && <p className={styles.error}>{error}</p>}
 
         {!error && order && (
           <div className={styles.card}>
-            {/* Basic Order Information */}
             <div className={styles.section}>
               <p className={styles.row}>
                 <strong className={styles.label}>Order ID:</strong>
@@ -95,6 +144,9 @@ export default function OrderDetailsPage({ params }) {
                 <strong className={styles.label}>Status:</strong>
                 <span className={styles.value}>{order.status}</span>
               </p>
+              {liveMessage && (
+                <p className={styles.liveMessage}>{liveMessage}</p>
+              )}
               <p className={styles.row}>
                 <strong className={styles.label}>Placed on:</strong>
                 <span className={styles.value}>
@@ -103,7 +155,6 @@ export default function OrderDetailsPage({ params }) {
               </p>
             </div>
 
-            {/* Shipping Destination Details */}
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Shipping Info</h2>
               <p className={styles.row}>
@@ -117,19 +168,35 @@ export default function OrderDetailsPage({ params }) {
                 <span className={styles.value}>{order.shippingInfo.email}</span>
               </p>
               <p className={styles.row}>
+                <strong className={styles.label}>Phone:</strong>
+                <span className={styles.value}>{order.shippingInfo.phone}</span>
+              </p>
+              <p className={styles.row}>
                 <strong className={styles.label}>Address:</strong>
                 <span className={styles.value}>
-                  {order.shippingInfo.address}
+                  {order.shippingInfo.addressLine1}
+                  {order.shippingInfo.addressLine2 &&
+                    `, ${order.shippingInfo.addressLine2}`}
+                  , {order.shippingInfo.city}, {order.shippingInfo.state}{" "}
+                  {order.shippingInfo.postalCode}, {order.shippingInfo.country}
+                </span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Shipping:</strong>
+                <span className={styles.value}>
+                  {formatShippingMethod(order.shippingMethod)}
                 </span>
               </p>
             </div>
 
-            {/* Line Items List */}
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Items</h2>
               <ul className={styles.items}>
                 {order.orderItems.map((item) => (
-                  <li key={`${item.product}-${item.name}`} className={styles.item}>
+                  <li
+                    key={`${item.product}-${item.name}`}
+                    className={styles.item}
+                  >
                     <p className={styles.itemName}>{item.name}</p>
                     <p className={styles.value}>Qty: {item.quantity}</p>
                     <p className={styles.value}>Price: Rs. {item.price}</p>
@@ -138,12 +205,23 @@ export default function OrderDetailsPage({ params }) {
               </ul>
             </div>
 
-            {/* Financial and Quantity Summary */}
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Summary</h2>
               <p className={styles.row}>
                 <strong className={styles.label}>Total items:</strong>
                 <span className={styles.value}>{order.totalItems}</span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Subtotal:</strong>
+                <span className={styles.value}>Rs. {order.subtotal}</span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Shipping fee:</strong>
+                <span className={styles.value}>Rs. {order.shippingFee}</span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Platform fee:</strong>
+                <span className={styles.value}>Rs. {order.platformFee}</span>
               </p>
               <p className={styles.row}>
                 <strong className={styles.label}>Total price:</strong>

@@ -1,9 +1,9 @@
-// Global error handling middleware
 const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
   let message = err.message || "Server error";
 
   if (err.name === "CastError") {
+    // Normalize invalid MongoDB ObjectId errors into a client-friendly response.
     statusCode = 400;
     message = "Invalid resource id";
   }

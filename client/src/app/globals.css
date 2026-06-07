@@ -2,38 +2,38 @@
 
 :root {
   color-scheme: light;
-  
-  /* Colors - Amazon Style */
-  --background: #f0f0f0;
-  --surface: rgba(255, 255, 255, 0.98);
+
+  --background: #f6f8fb;
+  --surface: rgba(255, 255, 255, 0.96);
   --surface-strong: #ffffff;
-  --foreground: #0f1419;
-  --muted: #565959;
-  --muted-strong: #3f4843;
-  --primary: #191970;
-  --primary-dark: #0F0F5C;
-  --primary-soft: rgba(255, 153, 0, 0.08);
-  --border: #d5d9d9;
-  --border-strong: #bcc0c0;
+  --surface-muted: #f1f5f9;
+  --foreground: #111827;
+  --muted: #64748b;
+  --muted-strong: #334155;
+  --primary: #0f766e;
+  --primary-dark: #115e59;
+  --primary-soft: rgba(15, 118, 110, 0.1);
+  --accent: #f59e0b;
+  --accent-soft: rgba(245, 158, 11, 0.12);
+  --border: #d9e2ec;
+  --border-strong: #b6c4d2;
   --success: #10b981;
-  --success-soft: rgba(16, 185, 129, 0.08);
+  --success-soft: rgba(16, 185, 129, 0.12);
   --warning: #f59e0b;
-  --warning-soft: rgba(245, 158, 11, 0.08);
+  --warning-soft: rgba(245, 158, 11, 0.12);
   --danger: #ef4444;
-  --danger-soft: rgba(239, 68, 68, 0.08);
-  
-  /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
-  --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12);
-  --shadow-xl: 0 24px 60px rgba(15, 23, 42, 0.16);
-  
-  /* Spacing */
-  --radius: 16px;
-  --radius-lg: 24px;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
+  --shadow: 0 14px 36px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.14);
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
   --radius-full: 999px;
-  
-  /* Transitions */
+
   --transition-fast: 0.15s ease;
   --transition: 0.2s ease;
   --transition-slow: 0.3s ease;
@@ -48,21 +48,10 @@ body {
   min-height: 100%;
   margin: 0;
   color: var(--foreground);
-  background: #f0f0f0;
+  background: var(--background);
   font-family: "Work Sans", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 26%),
-    radial-gradient(circle at bottom left, rgba(129, 140, 248, 0.10), transparent 18%);
-  z-index: -1;
 }
 
 *,
@@ -71,18 +60,28 @@ body::before {
   box-sizing: border-box;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   line-height: 1.1;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
 }
 
 p {
   line-height: 1.6;
 }
 
-/* Form Elements */
 button,
 input,
 textarea,
@@ -94,7 +93,7 @@ select {
 button {
   cursor: pointer;
   font-weight: 600;
-  transition: 
+  transition:
     background var(--transition-fast),
     color var(--transition-fast),
     border-color var(--transition-fast),
@@ -117,15 +116,23 @@ button:disabled {
   cursor: not-allowed;
 }
 
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 input,
 textarea,
 select {
-  padding: 10px 14px;
+  padding: 11px 14px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--foreground);
-  transition: 
+  transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast),
     background var(--transition-fast);
@@ -136,7 +143,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-soft);
+  box-shadow: 0 0 0 4px var(--primary-soft);
 }
 
 input::placeholder,
@@ -144,11 +151,10 @@ textarea::placeholder {
   color: var(--muted);
 }
 
-/* Links */
 a {
   color: inherit;
   text-decoration: none;
-  transition: 
+  transition:
     color var(--transition-fast),
     opacity var(--transition-fast);
   position: relative;
@@ -174,7 +180,6 @@ main {
   min-height: calc(100vh - 78px);
 }
 
-/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -207,7 +212,8 @@ main {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -215,7 +221,6 @@ main {
   }
 }
 
-/* Utility Classes */
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
@@ -236,7 +241,6 @@ main {
   border-width: 0;
 }
 
-/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
