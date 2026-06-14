@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const config = require("../config");
+const sendErrorResponse = require("../utils/errorResponse");
 
 // Attach the verified JWT claims used by downstream controllers and role checks.
 const protect = (req, res, next) => {
@@ -7,7 +8,11 @@ const protect = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({ message: "Not authorized, token missing" });
+      sendErrorResponse(res, {
+        statusCode: 401,
+        message: "Not authorized, token missing",
+        code: "AUTH_TOKEN_MISSING",
+      });
       return;
     }
 
@@ -22,7 +27,11 @@ const protect = (req, res, next) => {
 
     next();
   } catch (err) {
-    res.status(401).json({ message: "Not authorized, token invalid" });
+    sendErrorResponse(res, {
+      statusCode: 401,
+      message: "Not authorized, token invalid",
+      code: "AUTH_TOKEN_INVALID",
+    });
   }
 };
 
@@ -30,7 +39,11 @@ const protect = (req, res, next) => {
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      res.status(403).json({ message: "Forbidden: insufficient permissions" });
+      sendErrorResponse(res, {
+        statusCode: 403,
+        message: "Forbidden: insufficient permissions",
+        code: "INSUFFICIENT_PERMISSIONS",
+      });
       return;
     }
 

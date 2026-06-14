@@ -28,7 +28,7 @@ class ProductService {
 
   // Convert query-string filters into a MongoDB-safe filter object.
   buildProductFilter(queryOptions) {
-    const { search, category, minPrice, maxPrice } = queryOptions;
+    const { search, category, minPrice, maxPrice, stockStatus } = queryOptions;
     const filter = {};
 
     const trimmedSearch = typeof search === "string" ? search.trim() : "";
@@ -46,6 +46,14 @@ class ProductService {
 
     if (priceFilter) {
       filter.price = priceFilter;
+    }
+
+    if (stockStatus === "in_stock") {
+      filter.stock = { $gt: 0 };
+    }
+
+    if (stockStatus === "out_of_stock") {
+      filter.stock = 0;
     }
 
     return filter;

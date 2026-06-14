@@ -1,6 +1,6 @@
 .page {
   max-width: 520px;
-  margin: 64px auto;
+  margin: 58px auto;
   padding: 0 24px;
   min-height: 100vh;
   display: flex;
@@ -14,7 +14,7 @@
 .backLink,
 .switchLink {
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   transition: opacity var(--transition);
 }
@@ -25,11 +25,13 @@
 }
 
 .card {
-  padding: 36px;
-  border: 1px solid var(--border);
+  padding: 38px;
+  border: 1px solid rgba(15, 118, 110, 0.14);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 42%),
+    var(--surface);
+  box-shadow: var(--shadow-lg);
   animation: slideUp 0.4s ease-out;
 }
 
@@ -46,7 +48,7 @@
 
 .eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   font-size: 11px;
   font-weight: 700;
   color: var(--primary);
@@ -94,6 +96,7 @@
   background: #fff;
   color: var(--foreground);
   font-size: 14px;
+  box-shadow: var(--shadow-xs);
   transition:
     border-color var(--transition),
     box-shadow var(--transition);
@@ -116,7 +119,7 @@
   border: none;
   border-radius: var(--radius);
   padding: 12px 20px;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff;
   font-weight: 700;
   font-size: 15px;
@@ -129,7 +132,7 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #0f4f49);
   box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
   transform: translateY(-2px);
 }

@@ -1,226 +1,140 @@
-# 🛍️ Cartify - Full Stack E-Commerce Platform
+# Cartify - Full Stack E-Commerce Platform
 
-A complete, production-ready e-commerce platform built with the MERN stack (MongoDB, Express, React, Node.js). Features include user authentication, product management, shopping cart, and order processing with role-based admin panel.
+Cartify is a MERN-style e-commerce application with a Next.js frontend, an Express API, MongoDB persistence, JWT authentication, role-based admin tools, live order status updates, and an AI shopping assistant.
 
-**Live Demo:** [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
+## Live Deployment
 
-**Live API:** [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com)
+| Service | Platform | URL |
+| --- | --- | --- |
+| Frontend | Vercel | https://cartify-frontend-rouge.vercel.app |
+| Backend API | Render | https://cartify-backend-lg8z.onrender.com |
+| Health Check | Render | https://cartify-backend-lg8z.onrender.com/health |
 
----
-
-## ⭐ **Highlights**
-
-- **Full-Stack MERN**: Modern JavaScript stack from frontend to backend
-- **Secure Authentication**: JWT-based auth with password hashing
-- **Role-Based Access**: Admin panel with restricted product & order management
-- **Persistent Cart**: Client-side cart with localStorage integration
-- **Product Images**: Admin-managed image URLs with previews and fallback UI
-- **Stock Safety**: Stock-aware cart controls and backend stock reservation
-- **Structured Checkout**: Full shipping fields, delivery method, and backend-calculated fees
-- **Admin Insights**: Dashboard metrics with order and inventory filters
-- **Production-Ready**: Input validation, error handling, and security best practices
-- **Live Deployment**: Frontend deployed on Vercel and backend deployed on Render
-
----
-
-## **Live Deployment**
-
-| Service      | Platform | URL                                                                                                  |
-| ------------ | -------- | ---------------------------------------------------------------------------------------------------- |
-| Frontend     | Vercel   | [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)               |
-| Backend API  | Render   | [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com)               |
-| Health Check | Render   | [https://cartify-backend-lg8z.onrender.com/health](https://cartify-backend-lg8z.onrender.com/health) |
-
-The deployed frontend uses the Render API through:
+Production client API value:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-The deployed backend allows the Vercel frontend through:
+Production server CORS value:
 
 ```env
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ```
 
----
+## Current Features
 
-## 📸 **Features**
+### Customer
 
-### 🛒 Customer Features
+- User registration, login, and session persistence
+- Product catalog with search, category, price filters, sorting, and pagination
+- AI shopping assistant for product recommendations by name, category, or budget
+- Product detail pages with image fallback UI
+- Persistent shopping cart with stock-aware quantity controls
+- Checkout with shipping details, shipping method, and fee summary
+- Order history and individual order tracking
+- Live order status updates through Socket.IO
 
-- ✅ User registration & authentication (JWT)
-- ✅ Product browsing
-- ✅ Product images with fallback UI
-- ✅ Shopping cart with persistent storage
-- ✅ Stock-aware cart quantity limits
-- ✅ Structured checkout with shipping method and fee summary
-- ✅ Order tracking & history
-- ✅ Live order status updates without refresh
-- ✅ Session persistence with localStorage
+### Admin
 
-### 👨‍💼 Admin Features
+- Role-protected admin dashboard
+- Store summary metrics for products, orders, revenue, active orders, and inventory health
+- Product create, update, delete, stock, category, and image URL management
+- Order list, status filtering, order details, and status updates
+- Low-stock and out-of-stock product visibility
 
-- ✅ Product management (create, update, delete)
-- ✅ Product image URL management
-- ✅ Order management & status tracking
-- ✅ Admin dashboard with store summary metrics
-- ✅ Order status filtering
-- ✅ Inventory management
-- ✅ Low-stock and out-of-stock inventory visibility
-- ✅ Role-based access control
+### Backend
 
-### 🔒 Security Features
+- JWT authentication and admin authorization middleware
+- Password hashing with bcryptjs
+- Backend validation for auth, products, checkout, and orders
+- Backend order total calculation and price verification
+- Atomic stock reservation before order creation
+- Socket.IO order rooms protected by JWT
+- Helmet security headers, Morgan request logging, API rate limiting, and JSON body size limits
+- Structured API error responses
 
-- ✅ JWT-based authentication
-- ✅ Password hashing with bcryptjs
-- ✅ Backend price verification (prevents fraud)
-- ✅ Backend checkout total calculation
-- ✅ Atomic stock reservation before orders
-- ✅ Role-based authorization middleware
+## Tech Stack
 
----
+### Frontend
 
-## 🏗️ **Architecture**
+- Next.js 16
+- React 19
+- Zustand
+- Axios
+- Socket.IO Client
+- CSS Modules
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Client (Next.js 16)                         │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Pages (App Router) + Components + State Management       │   │
-│  │ - Auth Context (JWT token management)                    │   │
-│  │ - Zustand Store (persistent cart)                        │   │
-│  │ - CSS Modules (scoped styling)                           │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                           ▲                                       │
-│                           │ Axios HTTP Client                     │
-│                           ▼                                       │
-├─────────────────────────────────────────────────────────────────┤
-│            API Gateway (Express.js on Node.js)                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ Routes → Controllers → Services → Models → MongoDB       │   │
-│  │ - Auth middleware (JWT verification)                     │   │
-│  │ - Error handling middleware                              │   │
-│  │ - Input validation                                       │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                           ▲                                       │
-│                           │                                       │
-│                           ▼                                       │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │ MongoDB (User, Product, Order collections)               │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Backend
 
----
+- Node.js 20.9+
+- Express 5
+- MongoDB with Mongoose
+- Socket.IO
+- JSON Web Tokens
+- bcryptjs
+- Helmet, Morgan, express-rate-limit
+- Gemini API integration for the shopping assistant, with a local fallback parser
 
-## 🛠️ **Tech Stack**
+### Deployment
 
-### **Frontend**
+- Frontend: Vercel
+- Backend: Render
+- Database: MongoDB Atlas or any compatible MongoDB connection string
 
-- **Framework:** Next.js 16 (React 19, App Router)
-- **State Management:** Zustand (cart), Context API (auth)
-- **Styling:** CSS Modules
-- **HTTP Client:** Axios
-- **Realtime:** Socket.IO client
-- **Build Tool:** Next.js built-in
+## Project Structure
 
-### **Backend**
-
-- **Runtime:** Node.js
-- **Server:** Express.js
-- **Realtime:** Socket.IO
-- **Database:** MongoDB with Mongoose
-- **Authentication:** JWT (JSON Web Tokens)
-- **Password:** bcryptjs
-
-### **Deployment**
-
-- **Frontend Hosting:** Vercel
-- **Backend Hosting:** Render
-- **Database:** MongoDB Atlas or compatible MongoDB connection
-- **Future DevOps:** Docker, GitHub Actions CI/CD, AWS deployment guide
-
----
-
-## 📁 **Project Structure**
-
-```
+```text
 e-commerce/
-├── client/                    # Next.js frontend
-│   ├── public/               # Static assets
-│   ├── src/
-│   │   ├── app/             # Next.js app router pages
-│   │   │   ├── admin/       # Admin dashboard pages
-│   │   │   ├── cart/        # Shopping cart page
-│   │   │   ├── checkout/    # Checkout page
-│   │   │   ├── login/       # Login page
-│   │   │   ├── orders/      # Order history page
-│   │   │   ├── products/    # Product pages
-│   │   │   └── register/    # Registration page
-│   │   ├── components/      # Reusable React components
-│   │   ├── context/         # React Context (Auth)
-│   │   ├── store/           # Zustand stores (Cart)
-│   │   └── utils/           # Utilities
-│   ├── package.json
-│   ├── next.config.mjs
-│   └── README.md
-│
-├── server/                   # Express backend
-│   ├── src/
-│   │   ├── index.js         # Server entry point
-│   │   ├── config/          # Configuration
-│   │   ├── models/          # Database schemas
-│   │   ├── controllers/     # Request handlers
-│   │   ├── services/        # Business logic
-│   │   ├── middlewares/     # Express middleware
-│   │   ├── routes/          # API routes
-│   │   ├── scripts/         # Utility scripts
-│   │   └── utils/           # Utilities
-│   ├── package.json
-│   └── README.md
-│
-└── README.md               # This file
+|-- client/                  # Next.js frontend
+|   |-- src/
+|   |   |-- app/             # App Router pages
+|   |   |-- components/      # Shared UI components
+|   |   |-- context/         # Auth and cart contexts
+|   |   |-- store/           # Zustand cart store
+|   |   `-- utils/           # Frontend validation helpers
+|   |-- package.json
+|   `-- README.md
+|
+|-- server/                  # Express backend
+|   |-- src/
+|   |   |-- config/          # Environment and database config
+|   |   |-- controllers/     # Request handlers
+|   |   |-- middlewares/     # Auth, not found, and error middleware
+|   |   |-- models/          # Mongoose models
+|   |   |-- routes/          # API routes
+|   |   |-- services/        # Business logic
+|   |   |-- utils/           # Shared backend utilities
+|   |   |-- index.js         # Server entry point
+|   |   `-- socket.js        # Socket.IO setup
+|   |-- package.json
+|   `-- README.md
+|
+`-- README.md
 ```
 
----
+## Local Setup
 
-## 🚀 **Quick Start**
+### Prerequisites
 
-### **Prerequisites**
+- Node.js 20.9+
+- npm
+- MongoDB running locally or a MongoDB Atlas connection string
+- Optional: Gemini API key for AI-powered shopping assistant responses
 
-- Node.js 18+ and npm
-- MongoDB (local or MongoDB Atlas)
-- Git
-
-### **Installation**
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/yourusername/e-commerce.git
-cd e-commerce
-```
-
-2. **Install backend dependencies**
+### Install Dependencies
 
 ```bash
 cd server
 npm install
-```
 
-3. **Install frontend dependencies**
-
-```bash
 cd ../client
 npm install
 ```
 
-4. **Setup environment variables**
+### Environment Variables
 
-Copy `server/.env.example` to `server/.env` and `client/.env.example` to `client/.env.local`.
-
-Create `server/.env`:
+Create `server/.env` from `server/.env.example`:
 
 ```env
 MONGO_URI=mongodb://localhost:27017/ecommerce
@@ -229,342 +143,149 @@ JWT_EXPIRE=1d
 NODE_ENV=development
 PORT=5000
 CLIENT_URL=http://localhost:3000
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
-Create `client/.env.local`:
+Create `client/.env.local` from `client/.env.example`:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
 
-### **Running Locally**
+### Run Locally
 
-**Terminal 1 - Backend (port 5000):**
+Start the backend:
 
 ```bash
 cd server
 npm start
 ```
 
-**Terminal 2 - Frontend (port 3000):**
+Start the frontend in another terminal:
 
 ```bash
 cd client
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open http://localhost:3000.
 
----
+## API Summary
 
-## 📚 **API Documentation**
+Production base URL:
 
-### **Base URL**
-
-Production:
-
-```
+```text
 https://cartify-backend-lg8z.onrender.com/api
 ```
 
-Local:
+Local base URL:
 
-```
+```text
 http://localhost:5000/api
 ```
 
-### **Authentication Endpoints**
+### Auth
 
-#### Register User
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me` - authenticated users
 
-```http
-POST /api/auth/register
-Content-Type: application/json
+### Products
 
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "name": "John Doe"
-}
-```
+- `GET /api/products`
+- `GET /api/products/:id`
+- `POST /api/products` - admin only
+- `PUT /api/products/:id` - admin only
+- `DELETE /api/products/:id` - admin only
 
-#### Login
+Supported product query parameters:
 
-```http
-POST /api/auth/login
-Content-Type: application/json
+| Parameter | Description |
+| --- | --- |
+| `search` | Searches product name and description |
+| `category` | Exact category match, case-insensitive |
+| `minPrice` | Minimum product price |
+| `maxPrice` | Maximum product price |
+| `stockStatus` | `in_stock`, `out_of_stock`, or omitted |
+| `sort` | `newest`, `oldest`, `price_asc`, `price_desc`, `name_asc`, `name_desc` |
+| `page` | Page number, defaults to `1` |
+| `limit` | Products per page, defaults to `8`, max `50` |
 
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
+### Orders
 
-#### Get Current User
+- `POST /api/orders` - authenticated users
+- `GET /api/orders/my-orders` - authenticated users
+- `GET /api/orders/:id` - owner or admin
+- `GET /api/orders` - admin only
+- `PUT /api/orders/:id/status` - admin only
 
-```http
-GET /api/auth/me
-Authorization: Bearer <token>
-```
+### Admin
 
----
+- `GET /api/admin/dashboard` - admin only
 
-### **Product Endpoints**
+### AI Shopping Assistant
 
-#### Get All Products
+- `POST /api/ai/shopping-assistant`
 
-```http
-GET /api/products
-```
-
-Supports optional query parameters:
-
-```http
-GET /api/products?search=phone&category=accessories&minPrice=500&maxPrice=2000&sort=price_asc&page=1&limit=8
-```
-
-Query parameters:
-
-| Name       | Description                                                                   |
-| ---------- | ----------------------------------------------------------------------------- |
-| `search`   | Searches product name and description                                         |
-| `category` | Filters by exact category, case-insensitive                                   |
-| `minPrice` | Minimum product price                                                         |
-| `maxPrice` | Maximum product price                                                         |
-| `sort`     | One of `newest`, `oldest`, `price_asc`, `price_desc`, `name_asc`, `name_desc` |
-| `page`     | Page number, defaults to `1`                                                  |
-| `limit`    | Products per page, defaults to `8`, max `50`                                  |
-
-Response:
+Request:
 
 ```json
 {
-  "products": [],
-  "page": 1,
-  "limit": 8,
-  "totalPages": 3,
-  "totalProducts": 19,
-  "hasNextPage": true,
-  "hasPrevPage": false
+  "message": "mouse under 2000"
 }
 ```
 
-#### Get Product by ID
+The assistant uses Gemini when `GEMINI_API_KEY` is set. If it is not set or the Gemini request fails, the backend uses the local fallback parser and still returns product recommendations from the catalog.
 
-```http
-GET /api/products/:id
+### Health
+
+- `GET /health`
+
+## WebSocket Events
+
+Cartify uses Socket.IO for order status notifications.
+
+Client to server:
+
+- `order:join` - join updates for one order with `{ orderId, token }`
+- `order:leave` - leave one order room with `{ orderId }`
+
+Server to client:
+
+- `order:status-updated` - emitted after an admin updates an order status
+- `order:error` - emitted when a socket join is rejected
+
+## Deployment Notes
+
+### Vercel Frontend
+
+Use the `client` directory as the Vercel root.
+
+```text
+Root Directory: client
+Build Command: npm run build
+Install Command: npm install
+Output Directory: .next
 ```
 
-#### Create Product (Admin only)
+Required environment variable:
 
-```http
-POST /api/products
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "name": "New Product",
-  "price": 49.99,
-  "description": "Product description",
-  "category": "accessories",
-  "stock": 50,
-  "image": "https://example.com/product-image.jpg"
-}
+```env
+NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-#### Update Product (Admin only)
+### Render Backend
 
-```http
-PUT /api/products/:id
-Authorization: Bearer <admin_token>
-Content-Type: application/json
+Use the `server` directory for the Render service.
+
+```text
+Build Command: npm install
+Start Command: npm start
+Health Check Path: /health
 ```
 
-#### Delete Product (Admin only)
-
-```http
-DELETE /api/products/:id
-Authorization: Bearer <admin_token>
-```
-
----
-
-### **Order Endpoints**
-
-#### Create Order
-
-```http
-POST /api/orders
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "orderItems": [
-    {
-      "product": "507f1f77bcf86cd799439011",
-      "quantity": 2
-    }
-  ],
-  "shippingInfo": {
-    "fullName": "John Doe",
-    "email": "user@example.com",
-    "phone": "+91 9876543210",
-    "addressLine1": "123 Main Street",
-    "addressLine2": "Apartment 4B",
-    "city": "Mumbai",
-    "state": "Maharashtra",
-    "postalCode": "400001",
-    "country": "India"
-  },
-  "shippingMethod": "standard"
-}
-```
-
-`shippingMethod` must be `standard` or `express`. The backend recalculates item prices, subtotal, shipping fee, platform fee, and final total.
-
-#### Get User's Orders
-
-```http
-GET /api/orders/my-orders
-Authorization: Bearer <token>
-```
-
-#### Get All Orders (Admin only)
-
-```http
-GET /api/orders
-Authorization: Bearer <admin_token>
-```
-
-#### Get Order by ID
-
-```http
-GET /api/orders/:id
-Authorization: Bearer <token>
-```
-
-#### Update Order Status (Admin only)
-
-```http
-PUT /api/orders/:id/status
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "status": "shipped"
-}
-```
-
----
-
-### **Admin Dashboard Endpoints**
-
-#### Get Admin Dashboard Summary
-
-```http
-GET /api/admin/dashboard
-Authorization: Bearer <admin_token>
-```
-
-Response includes:
-
-- total products
-- total orders
-- non-cancelled order value
-- active orders
-- low-stock count
-- out-of-stock count
-- orders grouped by status
-- recent orders
-- low-stock product preview
-- out-of-stock product preview
-
----
-
-## 🗄️ **Database Models**
-
-### **User Schema**
-
-```javascript
-{
-  email: String (unique),
-  password: String (hashed),
-  name: String,
-  role: String ("shopper" | "admin"),
-  createdAt: Date
-}
-```
-
-### **Product Schema**
-
-```javascript
-{
-  name: String,
-  description: String,
-  price: Number,
-  stock: Number,
-  category: String,
-  image: String (URL),
-  createdAt: Date
-}
-```
-
-### **Order Schema**
-
-```javascript
-{
-  user: ObjectId (ref: User),
-  orderItems: [
-    {
-      product: ObjectId (ref: Product),
-      name: String,
-      price: Number,
-      quantity: Number
-    }
-  ],
-  shippingInfo: {
-    fullName: String,
-    email: String,
-    phone: String,
-    addressLine1: String,
-    addressLine2: String,
-    city: String,
-    state: String,
-    postalCode: String,
-    country: String
-  },
-  shippingMethod: String ("standard" | "express"),
-  subtotal: Number,
-  shippingFee: Number,
-  platformFee: Number,
-  totalItems: Number,
-  totalPrice: Number,
-  status: String ("placed" | "processing" | "shipped" | "delivered" | "cancelled"),
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
----
-
-## 🔐 **Security Features**
-
-- ✅ JWT authentication with configurable expiration through `JWT_EXPIRE`
-- ✅ Password hashing with bcryptjs (10 salt rounds)
-- ✅ Backend price recalculation on orders
-- ✅ Atomic stock reservation before order creation
-- ✅ Input validation on both frontend & backend
-- ✅ Role-based authorization middleware
-
----
-
-## 📝 **Environment Variables**
-
-### **Server (.env)**
-
-Copy `server/.env.example` to `server/.env` for local development.
-
-Production on Render:
+Required production environment variables:
 
 ```env
 MONGO_URI=your_mongodb_atlas_connection_string
@@ -573,76 +294,28 @@ JWT_EXPIRE=1d
 NODE_ENV=production
 PORT=5000
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
+GEMINI_API_KEY=your_gemini_api_key_if_using_ai
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
-Local development:
+`GEMINI_API_KEY` is optional. Without it, the shopping assistant uses fallback filter parsing.
 
-```env
-MONGO_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=replace_with_a_secret_at_least_32_characters
-JWT_EXPIRE=1d
-NODE_ENV=development
-PORT=5000
-CLIENT_URL=http://localhost:3000
+## Scripts
+
+Client:
+
+```bash
+npm run dev
+npm run build
+npm start
+npm run lint
 ```
 
-### **Client (.env.local)**
+Server:
 
-Copy `client/.env.example` to `client/.env.local` for local development.
-
-Production on Vercel:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
+```bash
+npm start
+npm run seed
 ```
 
-Local development:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
-```
-
----
-
-## 📚 **Documentation**
-
-- [Frontend README](client/README.md) - Next.js client setup & features
-- [Backend README](server/README.md) - Express API documentation
-- [Phase 3 Roadmap](docs/cartify-phase-3-roadmap.md) - Remaining post-Phase 2 work
-- [Admin Setup](docs/admin-setup.md) - How to create an admin user
-
----
-
-## 📄 **License**
-
-This project is open source and available under the MIT License.
-
----
-
-## 🤝 **Contributing**
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 🎯 **Next Steps / Roadmap**
-
-- [ ] Docker deployment setup
-- [ ] GitHub Actions CI/CD
-- [ ] AWS deployment guide
-- [ ] Search & filtering functionality
-- [ ] Product reviews & ratings
-- [ ] Wishlist feature
-- [ ] Payment integration (Stripe)
-- [ ] Email notifications
-- [ ] API documentation (Swagger)
-
----
-
-**Last Updated:** June 7, 2026
+Last updated: June 14, 2026

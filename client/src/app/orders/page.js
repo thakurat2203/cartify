@@ -94,7 +94,9 @@ export default function OrdersPage() {
                 </p>
                 <p className={styles.row}>
                   <strong className={styles.label}>Status:</strong>
-                  <span className={styles.value}>{order.status}</span>
+                  <span className={`${styles.value} ${styles.statusBadge}`}>
+                    {order.status}
+                  </span>
                 </p>
                 <p className={styles.row}>
                   <strong className={styles.label}>Total items:</strong>

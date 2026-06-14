@@ -1,290 +1,159 @@
-# 🎨 E-Commerce Frontend - Next.js React Application
+# Cartify Client - Next.js Frontend
 
-The frontend client for the Cartify platform, built with **Next.js 16**, **React 19**, and **Zustand** state management. Provides a complete user interface for browsing products, managing shopping cart, and processing orders.
+The Cartify client is a Next.js 16 application for the e-commerce storefront and admin UI. It connects to the Express API, manages auth state, keeps the shopping cart in local storage, and listens for live order status updates.
 
-## **Live Deployment**
+## Live Deployment
 
-- **Frontend:** [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
-- **Backend API:** [https://cartify-backend-lg8z.onrender.com](https://cartify-backend-lg8z.onrender.com)
-- **Health Check:** [https://cartify-backend-lg8z.onrender.com/health](https://cartify-backend-lg8z.onrender.com/health)
+- Frontend: https://cartify-frontend-rouge.vercel.app
+- Backend API: https://cartify-backend-lg8z.onrender.com
+- Backend health check: https://cartify-backend-lg8z.onrender.com/health
 
-Vercel environment variable:
+Production environment variable:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
----
+## Current Features
 
-## ✨ **Features**
+### Storefront
 
-### **User Features**
+- Product catalog with search, category, price filters, sorting, and pagination
+- AI shopping assistant panel on the catalog page
+- Product cards with stock badges and image fallback UI
+- Product detail pages
+- Persistent shopping cart using Zustand and localStorage
+- Stock-aware add-to-cart and cart quantity controls
+- Checkout form with shipping details, shipping method, and fee summary
+- User order history and order detail pages
+- Live order status updates through Socket.IO
 
-- ✅ User registration & login
-- ✅ Browse all products
-- ✅ View product details
-- ✅ Product images with clean fallback UI
-- ✅ Add/remove items from cart
-- ✅ Cart quantity limits based on available stock
-- ✅ Persistent shopping cart (localStorage)
-- ✅ Structured checkout with shipping method and fee summary
-- ✅ Order history tracking
-- ✅ Responsive design
+### Authentication
 
-### **Admin Features**
+- Register, login, and logout flows
+- Auth state managed with React Context
+- JWT stored client-side for authenticated API requests
+- Admin-only navigation and route checks based on user role
 
-- ✅ Admin dashboard with store summary metrics
-- ✅ Product management dashboard
-- ✅ Create/edit/delete products
-- ✅ Add product image URLs with live preview
-- ✅ View all orders
-- ✅ Update order status
-- ✅ Filter orders by status
-- ✅ Filter products by stock health
-- ✅ Low-stock and out-of-stock inventory previews
-- ✅ Admin-only route protection
+### Admin
 
-### **Technical Features**
+- Dashboard with product, order, revenue, active order, and inventory metrics
+- Product create, edit, delete, stock, category, and image URL management
+- Order list with status filtering
+- Order detail pages with admin status updates
+- Low-stock and out-of-stock inventory visibility
 
-- ✅ Next.js App Router (modern)
-- ✅ Zustand for persistent cart state
-- ✅ Context API for authentication
-- ✅ Socket.IO client for live order status updates
-- ✅ CSS Modules for styling
-- ✅ Form validation
-- ✅ Optional image URL validation
-- ✅ Error boundaries & error handling
+## Tech Stack
 
----
+- Next.js 16
+- React 19
+- Zustand
+- Axios
+- Socket.IO Client
+- CSS Modules
+- ESLint
 
-## ✨ **Next.js Features Used**
+## Project Structure
 
-- **App Router**: Modern file-based routing in `/app` directory
-- **Layouts**: Root layout with global styles and header
-- **Dynamic Routes**: `[id]` and nested routes for products/orders
-- **CSS Modules**: Component-scoped styling
-- **Built-in Image Optimization**: Next.js Image component ready
-- **Environment Variables**: `.env.local` for API configuration
-- **Middleware Ready**: Extensible middleware support
+```text
+client/
+|-- src/
+|   |-- app/
+|   |   |-- admin/             # Admin dashboard, products, and orders
+|   |   |-- cart/              # Cart page
+|   |   |-- checkout/          # Checkout flow
+|   |   |-- login/             # Login page
+|   |   |-- orders/            # Customer order history and details
+|   |   |-- products/          # Product detail pages
+|   |   |-- register/          # Registration page
+|   |   |-- globals.css
+|   |   |-- layout.js
+|   |   `-- page.js            # Catalog and AI shopping assistant
+|   |-- components/
+|   |   |-- cart-hydrator.js
+|   |   `-- site-header.js
+|   |-- context/
+|   |   |-- auth-context.js
+|   |   `-- cart-context.js
+|   |-- store/
+|   |   `-- cart-store.js
+|   `-- utils/
+|       `-- validation.js
+|-- package.json
+`-- README.md
+```
 
----
+## Local Setup
 
-## 🛠️ **Tech Stack**
+### Prerequisites
 
-| Technology      | Version  | Purpose                       |
-| --------------- | -------- | ----------------------------- |
-| **Next.js**     | 16       | React framework, SSR, routing |
-| **React**       | 19       | UI library                    |
-| **Zustand**     | Latest   | State management (cart)       |
-| **Axios**       | Latest   | HTTP client                   |
-| **Socket.IO Client** | Latest | Live order status updates |
-| **CSS Modules** | Built-in | Component styling             |
-| **JavaScript**  | ES6+     | Language                      |
+- Node.js 20.9+
+- npm
+- Backend API running locally on port `5000`, or the live Render API
 
----
-
-## 🚀 **Getting Started**
-
-### **Prerequisites**
-
-- Node.js 18+
-- npm or yarn
-- Backend API running locally on port 5000, or the live Render API
-
-### **Installation**
-
-1. **Install dependencies**
+### Install
 
 ```bash
 npm install
 ```
 
-2. **Set up environment variables**
-   Copy `.env.example` to `.env.local` for local development:
+### Environment
+
+Create `.env.local` from `.env.example`:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
 
-For Vercel production, set:
+Use this value when deploying to Vercel:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-### **Running Locally**
+### Run
 
-**Development Mode:**
+Development server:
 
 ```bash
 npm run dev
 ```
 
-Opens [http://localhost:3000](http://localhost:3000)
-
-Production site: [https://cartify-frontend-rouge.vercel.app](https://cartify-frontend-rouge.vercel.app)
-
-**Production Build:**
+Production build:
 
 ```bash
 npm run build
 npm start
 ```
 
-**Linting:**
+Lint:
 
 ```bash
 npm run lint
 ```
 
----
+The local app runs at http://localhost:3000.
 
-## 🏗️ **Architecture**
+## API Usage
 
-```
-┌────────────────────────────────────────────┐
-│       Next.js App (Port 3000)               │
-├────────────────────────────────────────────┤
-│                                             │
-│  /app (App Router)                          │
-│  ├── layout.js (Root layout)                │
-│  ├── page.js (Home/Products)                │
-│  ├── /admin (Dashboard + protected routes)  │
-│  │   ├── page.js (Dashboard metrics)        │
-│  │   ├── /products (CRUD + stock filter)    │
-│  │   └── /orders (Management + filter)      │
-│  ├── /cart (Shopping cart)                  │
-│  ├── /checkout (Order creation)             │
-│  ├── /orders (User order history)           │
-│  ├── /login (Auth)                          │
-│  └── /register (Auth)                       │
-│                                             │
-│  State Management                           │
-│  ├── Context API (auth-context.js)          │
-│  │   └── User token & role info             │
-│  └── Zustand (cart-store.js)                │
-│      └── Persistent cart state              │
-│                                             │
-│  Components (Reusable UI)                   │
-│  ├── site-header.js (Navigation)            │
-│  └── cart-hydrator.js (SSR hydration)       │
-│                                             │
-│  Utils & Validation                         │
-│  └── validation.js (Form rules)             │
-│                                             │
-└────────────────────────────────────────────┘
-         │
-         │ Axios HTTP Requests
-         ▼
-┌────────────────────────────────────────────┐
-│  Express API Server (Render / Port 5000)   │
-│  (See Server README for details)            │
-└────────────────────────────────────────────┘
-```
+The frontend reads the API base URL from `NEXT_PUBLIC_API_BASE_URL`.
 
----
+Main API areas used by the client:
 
-## 📁 **Project Structure**
+- `/api/auth` for register, login, and current user
+- `/api/products` for catalog, product details, and admin product management
+- `/api/orders` for checkout, order history, order details, and admin order updates
+- `/api/admin/dashboard` for admin summary metrics
+- `/api/ai/shopping-assistant` for catalog recommendations
+- `/health` for backend availability checks
 
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── globals.css        # Global styles
-│   ├── layout.js          # Root layout
-│   ├── page.js            # Home (products listing)
-│   ├── not-found.js       # 404 page
-│   ├── admin/             # Admin pages (protected)
-│   ├── cart/              # Shopping cart
-│   ├── checkout/          # Checkout
-│   ├── login/             # Login
-│   ├── orders/            # User orders
-│   ├── products/          # Product details
-│   └── register/          # Registration
-│
-├── components/            # Reusable components
-│   ├── cart-hydrator.js
-│   └── site-header.js
-│
-├── context/               # React Context
-│   └── auth-context.js
-│
-├── store/                 # Zustand stores
-│   └── cart-store.js
-│
-└── utils/                 # Utilities
-    └── validation.js
-```
+## State Management
 
----
+Cart state is managed by Zustand and persisted to localStorage. Auth state is managed by React Context and provides token, user, and role data to protected pages and API calls.
 
-## 🔐 **State Management**
+## Vercel Deployment
 
-### **Cart State (Zustand)**
-
-- Persistent cart with localStorage
-- Add/remove/update items
-- Stock info stored in cart items for quantity controls
-- Cart totals calculation
-- Hydration for SSR compatibility
-
-### **Auth State (Context API)**
-
-- User login/logout
-- Token management
-- Role-based access
-
----
-
-## 📝 **Form Validation**
-
-Validation rules in `utils/validation.js`:
-
-- **Email:** Valid format required
-- **Password:** Min 8 characters
-- **Name:** 2-100 characters
-- **Product Name:** Required, 2-200 characters
-- **Price:** Positive number
-- **Stock:** Non-negative integer
-- **Category:** Required, max 50 characters
-- **Description:** Optional, max 1000 characters
-- **Image URL:** Optional, valid `http` or `https` URL, max 500 characters
-- **Phone:** 7-20 characters, numbers and common phone symbols only
-- **Address line 1:** Required, 5-200 characters
-- **Address line 2:** Optional, max 200 characters
-- **City/State/Country:** 2-80 characters
-- **Postal code:** 3-20 characters, letters, numbers, spaces, and hyphens
-- **Shipping method:** `standard` or `express`
-
----
-
-## 🧪 **Development**
-
-### **UI/UX Polish**
-
-- Cleaner global spacing, focus states, and border radius scale
-- Responsive header navigation for customer and admin links
-- Improved catalog cards, product image fallbacks, filters, and pagination styling
-- Cleaner cart, checkout, order, and admin management panels
-- More consistent admin product/order buttons, filters, badges, and mobile layouts
-
----
-
-### **Available Scripts**
-
-```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm start        # Start production server
-npm run lint     # Run ESLint
-```
-
----
-
-## **Deployment**
-
-This app is deployed on Vercel from the `client` directory.
-
-Recommended Vercel settings:
+Use these Vercel settings:
 
 ```text
 Root Directory: client
@@ -293,26 +162,21 @@ Install Command: npm install
 Output Directory: .next
 ```
 
-Required environment variable:
+Required Vercel environment variable:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-After changing this variable in Vercel, redeploy the frontend.
+After changing environment variables in Vercel, trigger a new deployment.
 
----
+## Scripts
 
-## 🎯 **Future Improvements**
+```bash
+npm run dev      # Start the local development server
+npm run build    # Build for production
+npm start        # Start the production server
+npm run lint     # Run ESLint
+```
 
-- [ ] Migrate to Tailwind CSS
-- [ ] Add product search & filtering
-- [ ] Implement pagination
-- [ ] Add product reviews
-- [ ] Dark mode toggle
-- [ ] Mobile app (React Native)
-- [ ] Internationalization (i18n)
-
----
-
-**Last Updated:** June 7, 2026
+Last updated: June 14, 2026

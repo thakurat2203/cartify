@@ -1,6 +1,6 @@
 .page {
   max-width: 1180px;
-  margin: 48px auto;
+  margin: 46px auto;
   padding: 0 24px 56px;
   color: var(--foreground);
 }
@@ -55,18 +55,19 @@
 }
 
 .primaryButton {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #ffffff;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.16);
 }
 
 .primaryButton:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #0f4f49);
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
 }
 
 .secondaryButton {
-  background: var(--surface-muted);
+  background: #ffffff;
   border: 1px solid var(--border);
   color: var(--foreground);
 }
@@ -113,9 +114,9 @@
   width: fit-content;
   padding: 12px 14px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-sm);
 }
 
 .filterRow label {
@@ -128,6 +129,7 @@
   min-height: 42px;
   border-radius: var(--radius);
   background: #ffffff;
+  box-shadow: var(--shadow-xs);
 }
 
 .list {
@@ -144,9 +146,11 @@
   gap: 18px;
   align-items: center;
   padding: 18px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(15, 118, 110, 0.14);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.05), transparent 42%),
+    var(--surface);
   box-shadow: var(--shadow-sm);
   transition:
     border-color var(--transition),
@@ -167,7 +171,10 @@
   place-items: center;
   overflow: hidden;
   border-radius: var(--radius);
-  background: var(--surface-muted);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.12), transparent 54%),
+    var(--surface-muted);
+  border: 1px solid rgba(15, 118, 110, 0.1);
 }
 
 .thumbnailImage {
@@ -177,7 +184,7 @@
 }
 
 .fallbackLetter {
-  color: var(--muted);
+  color: var(--primary);
   font-size: 2rem;
   font-weight: 800;
 }
@@ -206,21 +213,25 @@
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 800;
+  border: 1px solid transparent;
 }
 
 .highstock {
   background: var(--success-soft);
   color: #047857;
+  border-color: rgba(16, 185, 129, 0.16);
 }
 
 .lowstock {
   background: var(--warning-soft);
-  color: #b45309;
+  color: var(--accent-strong);
+  border-color: rgba(217, 119, 6, 0.18);
 }
 
 .outofstock {
   background: var(--danger-soft);
   color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.16);
 }
 
 .actions {

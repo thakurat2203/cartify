@@ -194,6 +194,9 @@ export default function CheckoutPage() {
       </div>
 
       <h1 className={styles.title}>Checkout</h1>
+      <p className={styles.subtitle}>
+        Confirm shipping details and review your order total before placing it.
+      </p>
 
       <div className={styles.grid}>
         <form onSubmit={handlePlaceOrder} className={styles.form}>

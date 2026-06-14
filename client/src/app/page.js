@@ -19,6 +19,17 @@ const initialFilters = {
   sort: "newest",
 };
 
+const exampleAssistantQueries = [
+  "mouse under 2000",
+  "cables below 500",
+  "headphones under 7000",
+];
+
+const assistantSourceLabels = {
+  gemini: "Gemini",
+  fallback: "Fallback",
+};
+
 const getStockBadge = (stock) => {
   const quantity = Number(stock);
 
@@ -50,6 +61,13 @@ export default function Home() {
   const [filters, setFilters] = useState(initialFilters);
   const [appliedFilters, setAppliedFilters] = useState(initialFilters);
   const [imageErrors, setImageErrors] = useState({});
+
+  const [assistantInput, setAssistantInput] = useState("");
+  const [assistantLoading, setAssistantLoading] = useState(false);
+  const [assistantError, setAssistantError] = useState("");
+  const [assistantResult, setAssistantResult] = useState(null);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [areFiltersOpen, setAreFiltersOpen] = useState(false);
 
   const addToCart = useCartStore((state) => state.addToCart);
 
@@ -116,17 +134,164 @@ export default function Home() {
     setCurrentPage(1);
   };
 
+  const askAssistant = async (message = assistantInput) => {
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage) {
+      setAssistantError("Ask for a product, category, or budget.");
+      return;
+    }
+
+    setAssistantLoading(true);
+    setAssistantError("");
+
+    try {
+      const response = await axios.post(
+        `${API_BASE}/api/ai/shopping-assistant`,
+        { message: trimmedMessage },
+      );
+
+      setAssistantResult(response.data);
+      setAssistantInput(trimmedMessage);
+    } catch (err) {
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "The assistant could not answer right now.";
+
+      setAssistantError(message);
+    } finally {
+      setAssistantLoading(false);
+    }
+  };
+
+  const handleAssistantSubmit = (event) => {
+    event.preventDefault();
+    askAssistant();
+  };
+
+  const handleExampleQuery = (query) => {
+    askAssistant(query);
+  };
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
+          <p className={styles.kicker}>Cartify Storefront</p>
           <h1 className={styles.title}>Product Catalog</h1>
+          <p className={styles.subtitle}>
+            Browse premium essentials, compare live stock, and build your cart
+            with a cleaner shopping flow.
+          </p>
         </div>
       </header>
 
       <main className={styles.main}>
-        <form className={styles.filters} onSubmit={handleApplyFilters}>
-          <label className={styles.field}>
+        <section
+          className={`${styles.assistantPanel} ${
+            isAssistantOpen ? styles.assistantPanelOpen : ""
+          }`}
+        >
+          <div className={styles.assistantHeader}>
+            <div>
+              <h2>AI Shopping Assistant</h2>
+              <p>Ask for products by name, category, or budget.</p>
+            </div>
+
+            <div className={styles.assistantHeaderActions}>
+              {assistantResult?.source ? (
+                <span className={styles.assistantSource}>
+                  {assistantSourceLabels[assistantResult.source] || "AI"}
+                </span>
+              ) : null}
+
+              <button
+                type="button"
+                className={styles.assistantToggle}
+                aria-expanded={isAssistantOpen}
+                aria-controls="shopping-assistant-body"
+                onClick={() => setIsAssistantOpen((prev) => !prev)}
+              >
+                {isAssistantOpen ? "Hide AI" : "Ask AI"}
+              </button>
+            </div>
+          </div>
+
+          <div id="shopping-assistant-body" className={styles.assistantBody}>
+            <form
+              className={styles.assistantForm}
+              onSubmit={handleAssistantSubmit}
+            >
+              <input
+                type="text"
+                value={assistantInput}
+                onChange={(event) => setAssistantInput(event.target.value)}
+                placeholder="Try: mouse under 2000"
+                maxLength={300}
+              />
+
+              <button type="submit" disabled={assistantLoading}>
+                {assistantLoading ? "Asking..." : "Ask"}
+              </button>
+            </form>
+
+            <div className={styles.assistantExamples}>
+              {exampleAssistantQueries.map((query) => (
+                <button
+                  key={query}
+                  type="button"
+                  onClick={() => handleExampleQuery(query)}
+                  disabled={assistantLoading}
+                >
+                  {query}
+                </button>
+              ))}
+            </div>
+
+            {assistantError && (
+              <p className={styles.assistantError}>{assistantError}</p>
+            )}
+
+            {assistantResult && !assistantError && (
+              <div className={styles.assistantResponse}>
+                <p>{assistantResult.message}</p>
+
+                {assistantResult.products?.length > 0 && (
+                  <ul className={styles.assistantProducts}>
+                    {assistantResult.products.map((product) => (
+                      <li
+                        key={product._id}
+                        className={styles.assistantProductCard}
+                      >
+                        <Link href={`/products/${product._id}`}>
+                          <strong>{product.name}</strong>
+                          <span>Rs. {product.price}</span>
+                          <small>{product.category}</small>
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() => addToCart(product)}
+                          disabled={product.stock === 0}
+                        >
+                          {product.stock > 0 ? "Add" : "Out"}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+        <form
+          className={`${styles.filters} ${
+            areFiltersOpen ? styles.filtersOpen : ""
+          }`}
+          onSubmit={handleApplyFilters}
+        >
+          <label className={`${styles.field} ${styles.searchField}`}>
             <span>Search</span>
             <input
               type="search"
@@ -137,69 +302,83 @@ export default function Home() {
             />
           </label>
 
-          <label className={styles.field}>
-            <span>Category</span>
-            <input
-              type="text"
-              name="category"
-              value={filters.category}
-              onChange={handleFilterChange}
-              placeholder="accessories"
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span>Min price</span>
-            <input
-              type="number"
-              name="minPrice"
-              value={filters.minPrice}
-              onChange={handleFilterChange}
-              min="0"
-              placeholder="0"
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span>Max price</span>
-            <input
-              type="number"
-              name="maxPrice"
-              value={filters.maxPrice}
-              onChange={handleFilterChange}
-              min="0"
-              placeholder="5000"
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span>Sort</span>
-            <select
-              name="sort"
-              value={filters.sort}
-              onChange={handleFilterChange}
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="price_asc">Price: Low to high</option>
-              <option value="price_desc">Price: High to low</option>
-              <option value="name_asc">Name: A to Z</option>
-              <option value="name_desc">Name: Z to A</option>
-            </select>
-          </label>
-
-          <div className={styles.filterActions}>
-            <button type="submit" className={styles.filterButton}>
-              Apply
-            </button>
-
+          <div className={styles.filterMobileHeader}>
             <button
               type="button"
-              className={styles.clearButton}
-              onClick={handleClearFilters}
+              className={styles.filterToggle}
+              aria-expanded={areFiltersOpen}
+              aria-controls="catalog-filter-fields"
+              onClick={() => setAreFiltersOpen((prev) => !prev)}
             >
-              Clear
+              {areFiltersOpen ? "Hide filters" : "Filters"}
             </button>
+          </div>
+
+          <div id="catalog-filter-fields" className={styles.filterPanel}>
+            <label className={styles.field}>
+              <span>Category</span>
+              <input
+                type="text"
+                name="category"
+                value={filters.category}
+                onChange={handleFilterChange}
+                placeholder="accessories"
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span>Min price</span>
+              <input
+                type="number"
+                name="minPrice"
+                value={filters.minPrice}
+                onChange={handleFilterChange}
+                min="0"
+                placeholder="0"
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span>Max price</span>
+              <input
+                type="number"
+                name="maxPrice"
+                value={filters.maxPrice}
+                onChange={handleFilterChange}
+                min="0"
+                placeholder="5000"
+              />
+            </label>
+
+            <label className={`${styles.field} ${styles.sortField}`}>
+              <span>Sort</span>
+              <select
+                name="sort"
+                value={filters.sort}
+                onChange={handleFilterChange}
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="price_asc">Price: Low to high</option>
+                <option value="price_desc">Price: High to low</option>
+                <option value="name_asc">Name: A to Z</option>
+                <option value="name_desc">Name: Z to A</option>
+              </select>
+            </label>
+
+            <div className={styles.filterActions}>
+              <button type="submit" className={styles.filterButton}>
+                Apply
+              </button>
+
+              <button
+                type="button"
+                className={styles.clearButton}
+                onClick={handleClearFilters}
+              >
+                Clear
+              </button>
+            </div>
           </div>
         </form>
 
@@ -207,7 +386,10 @@ export default function Home() {
         {error && <p className={styles.error}>{error}</p>}
 
         {!loading && !error && products.length === 0 && (
-          <p className={styles.info}>No products found.</p>
+          <p className={styles.info}>
+            No products found. Try clearing filters or searching a different
+            category.
+          </p>
         )}
 
         {!loading && !error && products.length > 0 && (

@@ -1,6 +1,6 @@
 .page {
   max-width: 900px;
-  margin: 48px auto;
+  margin: 46px auto;
   padding: 0 24px 40px;
   color: var(--foreground);
 }
@@ -17,6 +17,7 @@
 .backLink {
   color: var(--primary);
   font-weight: 700;
+  font-size: 14px;
 }
 
 .title,
@@ -31,6 +32,15 @@
   color: var(--muted);
 }
 
+.message {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  font-weight: 600;
+}
+
 .badge {
   display: inline-block;
   width: fit-content;
@@ -38,39 +48,47 @@
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 700;
+  border: 1px solid transparent;
 }
 
 .status-placed {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  border-color: rgba(37, 99, 235, 0.16);
 }
 
 .status-processing {
   background: rgba(168, 85, 247, 0.1);
-  color: #a855f7;
+  color: #7e22ce;
+  border-color: rgba(168, 85, 247, 0.16);
 }
 
 .status-shipped {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-color: rgba(217, 119, 6, 0.16);
 }
 
 .status-delivered {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+  background: var(--success-soft);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.16);
 }
 
 .status-cancelled {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: var(--danger-soft);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.16);
 }
 
 .card {
-  border: 1px solid var(--border);
+  border: 1px solid rgba(15, 118, 110, 0.14);
   border-radius: var(--radius-lg);
   padding: 24px;
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.06), transparent 42%),
+    var(--surface);
+  box-shadow: var(--shadow);
   display: grid;
   gap: 24px;
 }
@@ -78,10 +96,18 @@
 .section {
   display: grid;
   gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .sectionTitle {
   font-size: 1.15rem;
+  margin: 0;
 }
 
 .row {
@@ -94,13 +120,14 @@
   padding: 0;
   display: grid;
   gap: 14px;
+  margin: 0;
 }
 
 .item {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
-  background: var(--surface-muted);
+  background: var(--surface-tint);
   display: grid;
   gap: 8px;
 }
@@ -109,6 +136,10 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-tint);
 }
 
 .select {
@@ -117,20 +148,21 @@
   border-radius: var(--radius);
   background: #fff;
   color: var(--foreground);
+  box-shadow: var(--shadow-xs);
 }
 
 .submitButton {
   border: none;
   border-radius: var(--radius);
   padding: 10px 16px;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #f8fafc;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .submitButton:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #0f4f49);
 }
 
 .submitButton:disabled {

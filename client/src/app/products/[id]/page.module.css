@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  padding: 52px 24px 80px;
+  padding: 46px 24px 80px;
   background: transparent;
   color: var(--foreground);
 }
@@ -16,14 +16,20 @@
   color: var(--primary);
   font-weight: 700;
   font-size: 14px;
+  padding: 8px 0;
+}
+
+.backLink:hover {
+  color: var(--primary-dark);
 }
 
 .info {
   color: var(--muted-strong);
-  padding: 16px;
+  padding: 16px 18px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .error {
@@ -35,11 +41,13 @@
 }
 
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 42%),
+    var(--surface);
+  border: 1px solid rgba(15, 118, 110, 0.14);
   border-radius: var(--radius-lg);
   padding: 28px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
 }
 
 .hero {
@@ -58,7 +66,10 @@
   font-size: 88px;
   font-weight: 700;
   color: #ecfeff;
-  background: #111827;
+  background:
+    linear-gradient(135deg, rgba(20, 184, 166, 0.24), transparent 58%),
+    #111827;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .content {
@@ -73,23 +84,31 @@
   font-size: 12px;
   color: var(--primary);
   font-weight: 700;
+  width: fit-content;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
 }
 
 .title {
   font-size: clamp(2rem, 3.2vw, 3.25rem);
   line-height: 1.05;
+  margin: 0;
 }
 
 .price {
   font-size: 2rem;
   font-weight: 700;
   color: var(--primary);
+  margin: 0;
 }
 
 .description {
   color: var(--muted-strong);
   font-size: 1rem;
   line-height: 1.8;
+  margin: 0;
 }
 
 .meta {
@@ -99,6 +118,7 @@
   flex-wrap: wrap;
   color: var(--muted);
   font-size: 0.95rem;
+  padding-top: 4px;
 }
 
 .stockBadge {
@@ -129,14 +149,15 @@
   border: none;
   border-radius: var(--radius);
   padding: 12px 18px;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #ffffff;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.18);
 }
 
 .addButton:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #0f4f49);
 }
 
 @media (max-width: 768px) {
@@ -153,6 +174,10 @@
     margin: 0 auto;
   }
 
+  .card {
+    padding: 20px;
+  }
+
   .addButton {
     width: 100%;
   }
@@ -165,6 +190,7 @@
 }
 
 .fallbackLetterLarge {
-  font-size: 3rem;
+  font-size: 3.4rem;
   font-weight: bold;
+  color: #ecfeff;
 }

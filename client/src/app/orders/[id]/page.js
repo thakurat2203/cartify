@@ -142,7 +142,9 @@ export default function OrderDetailsPage({ params }) {
               </p>
               <p className={styles.row}>
                 <strong className={styles.label}>Status:</strong>
-                <span className={styles.value}>{order.status}</span>
+                <span className={`${styles.value} ${styles.statusBadge}`}>
+                  {order.status}
+                </span>
               </p>
               {liveMessage && (
                 <p className={styles.liveMessage}>{liveMessage}</p>

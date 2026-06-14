@@ -76,7 +76,7 @@ export default function LoginPage() {
       </div>
 
       <div className={styles.card}>
-        <p className={styles.eyebrow}>Auth UI</p>
+        <p className={styles.eyebrow}>Cartify Account</p>
 
         <h1 className={styles.title}>Login</h1>
         <p className={styles.subtitle}>

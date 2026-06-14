@@ -1,6 +1,6 @@
 .page {
   min-height: calc(100vh - 78px);
-  padding: 48px 24px 80px;
+  padding: 46px 24px 80px;
   color: var(--foreground);
 }
 
@@ -16,12 +16,14 @@
   margin: 0 auto;
   display: grid;
   gap: 14px;
-  padding: 52px 28px;
+  padding: 54px 30px;
   text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 44%),
+    var(--surface);
+  border: 1px solid rgba(15, 118, 110, 0.14);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
 }
 
 .empty h1,
@@ -44,6 +46,11 @@
   align-items: flex-start;
   gap: 18px;
   flex-wrap: wrap;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-sm);
 }
 
 .clearButton {
@@ -74,10 +81,10 @@
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  padding: 20px;
+  padding: 20px 22px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow-sm);
   transition:
     border-color var(--transition),
@@ -94,6 +101,7 @@
 .itemTitle {
   margin: 0 0 6px;
   font-size: 17px;
+  color: var(--foreground);
 }
 
 .item p {
@@ -116,8 +124,12 @@
 .controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-tint);
 }
 
 .controls span {
@@ -131,7 +143,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px 14px;
-  background: var(--surface-muted);
+  background: #ffffff;
   color: var(--foreground);
   cursor: pointer;
   font-size: 14px;
@@ -163,11 +175,13 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 10px;
-  padding: 20px;
-  border: 1px solid var(--border);
+  padding: 22px;
+  border: 1px solid rgba(15, 118, 110, 0.14);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 45%),
+    var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .summary h2 {
@@ -182,7 +196,7 @@
   justify-content: center;
   min-height: 42px;
   color: #ffffff;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   border-radius: var(--radius);
   padding: 11px 16px;
   font-weight: 700;
@@ -193,7 +207,7 @@
 }
 
 .summaryLink:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #0f4f49);
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
 }
@@ -217,6 +231,10 @@
   .controls,
   .summary {
     width: 100%;
+  }
+
+  .controls {
+    align-items: stretch;
   }
 
   .summary {

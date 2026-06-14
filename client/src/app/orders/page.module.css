@@ -1,6 +1,6 @@
 .page {
   max-width: 980px;
-  margin: 48px auto;
+  margin: 46px auto;
   padding: 0 24px 60px;
   color: var(--foreground);
 }
@@ -20,14 +20,28 @@
   font-size: 14px;
 }
 
+.backLink:hover {
+  color: var(--primary-dark);
+}
+
 .title {
   color: var(--foreground);
   font-size: clamp(1.9rem, 3vw, 2.4rem);
+  margin: 0;
 }
 
 .message,
 .value {
   color: var(--muted);
+}
+
+.message {
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  font-weight: 600;
 }
 
 .error {
@@ -47,10 +61,12 @@
 }
 
 .card {
-  border: 1px solid var(--border);
+  border: 1px solid rgba(15, 118, 110, 0.14);
   border-radius: var(--radius-lg);
   padding: 22px;
-  background: var(--surface);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.06), transparent 42%),
+    var(--surface);
   box-shadow: var(--shadow-sm);
   display: grid;
   gap: 16px;
@@ -75,18 +91,31 @@
   color: var(--foreground);
 }
 
+.statusBadge {
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
 .detailsLink {
   width: fit-content;
   margin-top: 6px;
   color: #ffffff;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   border-radius: var(--radius);
   padding: 12px 18px;
   font-weight: 700;
 }
 
 .detailsLink:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #0f4f49);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
 }
 
 @media (min-width: 640px) {

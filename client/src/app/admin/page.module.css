@@ -1,6 +1,6 @@
 .page {
   max-width: 1240px;
-  margin: 48px auto;
+  margin: 46px auto;
   padding: 0 24px 48px;
   color: var(--foreground);
 }
@@ -61,18 +61,19 @@
 }
 
 .primaryButton {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.16);
 }
 
 .secondaryButton {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.86);
   color: var(--foreground);
   border: 1px solid var(--border);
 }
 
 .primaryButton:hover {
-  background: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark), #0f4f49);
   color: #ffffff;
 }
 
@@ -97,7 +98,7 @@
 .statCard,
 .statusCard,
 .listItem {
-  border: 1px solid var(--border);
+  border: 1px solid rgba(15, 118, 110, 0.12);
   border-radius: var(--radius-lg);
   background: var(--surface);
 }
@@ -107,6 +108,9 @@
   gap: 8px;
   padding: 18px;
   box-shadow: var(--shadow-sm);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.06), transparent 45%),
+    var(--surface);
   transition:
     border-color var(--transition),
     box-shadow var(--transition),
@@ -136,6 +140,11 @@
 .section {
   display: grid;
   gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow-sm);
 }
 
 .sectionHeader {
@@ -164,6 +173,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px;
+  box-shadow: var(--shadow-xs);
 }
 
 .statusValue {
@@ -192,6 +202,7 @@
   gap: 14px;
   padding: 14px;
   box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .itemTitle {
@@ -206,13 +217,19 @@
 }
 
 .warning {
-  color: #b45309;
+  color: var(--accent-strong);
   white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
 }
 
 .danger {
   color: #b91c1c;
   white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: var(--danger-soft);
 }
 
 @media (max-width: 1024px) {

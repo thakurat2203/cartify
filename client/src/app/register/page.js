@@ -100,7 +100,7 @@ export default function RegisterPage() {
       </div>
 
       <div className={styles.card}>
-        <p className={styles.eyebrow}>Auth UI</p>
+        <p className={styles.eyebrow}>Cartify Account</p>
 
         <h1 className={styles.title}>Register</h1>
         <p className={styles.subtitle}>
