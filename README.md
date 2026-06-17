@@ -1,5 +1,7 @@
 # Cartify - Full Stack E-Commerce Platform
 
+[![CI](https://github.com/thakurat2203/cartify/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thakurat2203/cartify/actions/workflows/ci.yml)
+
 Cartify is a MERN-style e-commerce application with a Next.js frontend, an Express API, MongoDB persistence, JWT authentication, role-based admin tools, live order status updates, and an AI shopping assistant.
 
 ## Live Deployment
@@ -81,6 +83,89 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 - Frontend: Vercel
 - Backend: Render
 - Database: MongoDB Atlas or any compatible MongoDB connection string
+
+## DevOps Proof
+
+Cartify includes a practical DevOps setup for local development, CI checks, containerized execution, deployment, monitoring, and production readiness.
+
+### Docker
+
+Backend image:
+
+```bash
+docker build -t cartify-server:dev ./server
+docker run --name cartify-server-dev --env-file ./server/.env -p 5000:5000 cartify-server:dev
+```
+
+Frontend image:
+
+```bash
+docker build --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:5000 -t cartify-client:dev ./client
+docker run --name cartify-client-dev -p 3000:3000 cartify-client:dev
+```
+
+### Docker Compose
+
+Run the full local stack with frontend, backend, MongoDB, and seed data:
+
+```bash
+docker compose up --build -d
+```
+
+Check services:
+
+```bash
+docker compose ps
+docker compose logs backend
+docker compose logs client
+docker compose logs seed
+```
+
+Stop services while keeping MongoDB volume data:
+
+```bash
+docker compose down
+```
+
+Remove services and MongoDB volume data:
+
+```bash
+docker compose down -v
+```
+
+### CI/CD
+
+GitHub Actions CI is defined in `.github/workflows/ci.yml` and runs on pushes to `main` and pull requests.
+
+CI checks:
+
+- Server dependency install with `npm ci`
+- Client dependency install with `npm ci`
+- Client lint with `npm run lint`
+- Client production build with `npm run build`
+- Backend Docker image build
+- Frontend Docker image build
+
+CD is handled by Vercel and Render:
+
+- Vercel deploys the `client` frontend.
+- Render deploys the `server` backend.
+- Deployments should be promoted only after CI is green.
+
+### Production Operations
+
+Important production checks:
+
+```bash
+curl -i https://cartify-backend-lg8z.onrender.com/health
+curl -i "https://cartify-backend-lg8z.onrender.com/api/products?limit=1"
+```
+
+Operational docs:
+
+- [Deployment and CD guide](docs/deployment-cd-guide.md)
+- [Monitoring and debugging checklist](docs/monitoring-debugging-checklist.md)
+- [Security and production readiness checklist](docs/production-readiness-checklist.md)
 
 ## Project Structure
 
@@ -258,6 +343,10 @@ Server to client:
 
 ## Deployment Notes
 
+Detailed deployment and CD notes are available in [docs/deployment-cd-guide.md](docs/deployment-cd-guide.md).
+Production monitoring and debugging steps are available in [docs/monitoring-debugging-checklist.md](docs/monitoring-debugging-checklist.md).
+Security and production readiness checks are available in [docs/production-readiness-checklist.md](docs/production-readiness-checklist.md).
+
 ### Vercel Frontend
 
 Use the `client` directory as the Vercel root.
@@ -318,4 +407,4 @@ npm start
 npm run seed
 ```
 
-Last updated: June 14, 2026
+Last updated: June 17, 2026

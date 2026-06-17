@@ -14,9 +14,12 @@ const server = http.createServer(app);
 app.use(helmet());
 app.use(morgan("dev"));
 
-
 // Restrict browser access to the configured frontend origins.
-const allowedOrigins = ["http://localhost:3000", config.clientUrl];
+const localClientUrl = "http://localhost:3000";
+const allowedOrigins =
+  config.nodeEnv === "production"
+    ? [config.clientUrl]
+    : [...new Set([localClientUrl, config.clientUrl])];
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

@@ -179,4 +179,4 @@ npm start        # Start the production server
 npm run lint     # Run ESLint
 ```
 
-Last updated: June 14, 2026
+Last updated: June 17, 2026

@@ -515,4 +515,4 @@ npm start      # Start the API server
 npm run seed   # Seed sample products
 ```
 
-Last updated: June 14, 2026
+Last updated: June 17, 2026
