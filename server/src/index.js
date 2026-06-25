@@ -7,9 +7,14 @@ const { initializeSocket } = require("./socket");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const cookieParser = require("./middlewares/cookieParser");
 const sendErrorResponse = require("./utils/errorResponse");
+const createOriginGuard = require("./middlewares/originGuard");
 
 const app = express();
+if (config.nodeEnv === "production") {
+  app.set("trust proxy", 1);
+}
 const server = http.createServer(app);
 app.use(helmet());
 app.use(morgan("dev"));
@@ -40,7 +45,16 @@ app.use(
   }),
 );
 
+app.use(cookieParser);
+
 app.use("/api", apiLimiter);
+
+app.use(
+  "/api",
+  createOriginGuard(allowedOrigins, {
+    exemptPaths: ["/api/payments/razorpay/webhook"],
+  }),
+);
 
 app.use(express.json({ limit: "100kb" }));
 

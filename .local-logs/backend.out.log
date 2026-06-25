@@ -1,0 +1,39 @@
+
+> cartify-server@1.0.0 start
+> node src/index.js
+
+[dotenv@17.3.1] injecting env (10) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+Server running on port 5000
+MongoDB connected
+[0mGET /health [32m200[0m 13.485 ms - 15[0m
+[0mGET /api/products?limit=1 [32m200[0m 162.449 ms - 481[0m
+[0mGET /api/auth/me [33m401[0m 2.892 ms - 150[0m
+[0mGET /api/products?page=1&limit=8&search=&category=&minPrice=&maxPrice=&sort=newest [36m304[0m 49.847 ms - -[0m
+[0mPOST /api/auth/refresh [32m200[0m 232.301 ms - 145[0m
+[0mGET /api/auth/me [36m304[0m 47.786 ms - -[0m
+[0mGET /api/products?page=2&limit=8&search=&category=&minPrice=&maxPrice=&sort=newest [32m200[0m 101.161 ms - 3014[0m
+[0mGET /api/products/6a11550c5b50fd7472c71901 [32m200[0m 66.093 ms - 363[0m
+[0mGET /api/products/6a11550c5b50fd7472c71901 [36m304[0m 44.249 ms - -[0m
+[0mGET /api/products?page=1&limit=8&search=&category=&minPrice=&maxPrice=&sort=newest [36m304[0m 72.181 ms - -[0m
+[0mGET /api/products?page=1&limit=8&search=&category=&minPrice=&maxPrice=&sort=newest [36m304[0m 78.553 ms - -[0m
+[0mGET /api/auth/me [33m401[0m 9.416 ms - 150[0m
+[0mGET /api/products?page=1&limit=8&search=&category=&minPrice=&maxPrice=&sort=newest [36m304[0m 87.275 ms - -[0m
+[0mPOST /api/auth/refresh [32m200[0m 328.680 ms - 145[0m
+[0mGET /api/auth/me [36m304[0m 73.886 ms - -[0m
+[0mGET /api/orders/my-orders [36m304[0m 81.991 ms - -[0m
+[0mGET /api/orders/my-orders [36m304[0m 65.387 ms - -[0m
+[0mGET /api/admin/dashboard [32m200[0m 436.800 ms - 4544[0m
+[0mGET /api/admin/dashboard [36m304[0m 301.881 ms - -[0m
+[0mGET /api/products?page=1&limit=8&search=&category=&minPrice=&maxPrice=&sort=newest [36m304[0m 42.810 ms - -[0m
+[0mGET /api/products?page=1&limit=8&search=&category=&minPrice=&maxPrice=&sort=newest [36m304[0m 90.770 ms - -[0m
+[0mOPTIONS /api/auth/me/profile [32m204[0m 0.871 ms - 0[0m
+[0mPATCH /api/auth/me/profile [33m404[0m 55.813 ms - 105[0m
+[0mGET /health [32m200[0m 0.781 ms - 15[0m
+[0mGET /api/orders/my-orders [36m304[0m 51.793 ms - -[0m
+[0mGET /api/orders/my-orders [36m304[0m 51.672 ms - -[0m
+[0mGET /api/orders/my-orders [36m304[0m 146.139 ms - -[0m
+[0mGET /api/orders/my-orders [36m304[0m 57.859 ms - -[0m
+[0mOPTIONS /api/auth/me/profile [32m204[0m 0.270 ms - 0[0m
+[0mPATCH /api/auth/me/profile [33m404[0m 2.013 ms - 105[0m
+[0mOPTIONS /api/auth/me/password [32m204[0m 0.391 ms - 0[0m
+[0mPATCH /api/auth/me/password [33m404[0m 2.171 ms - 105[0m

@@ -3,13 +3,10 @@
 /* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import styles from "./page.module.css";
 import Link from "next/link";
 import { useCartStore } from "@/store/cart-store";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 const initialFilters = {
   search: "",
@@ -20,14 +17,28 @@ const initialFilters = {
 };
 
 const exampleAssistantQueries = [
+  "mouse",
   "mouse under 2000",
-  "cables below 500",
-  "headphones under 7000",
+  "Build me an office setup under 5000",
 ];
 
 const assistantSourceLabels = {
   gemini: "Gemini",
-  fallback: "Fallback",
+  fallback: "Local fallback",
+};
+
+const isBundleAssistantQuery = (message) => {
+  const normalizedMessage = message.toLowerCase();
+  const asksForBundle =
+    /\b(setup|bundle|kit|essentials)\b/.test(normalizedMessage) ||
+    /\bbuild\s+(?:me\s+)?(?:a\s+)?cart\b/.test(normalizedMessage);
+  const mentionsUseCase = /\b(office|gaming|study|travel)\b/.test(
+    normalizedMessage,
+  );
+  const mentionsBudget =
+    /\b(under|below|up to|max|maximum|budget)\b/.test(normalizedMessage);
+
+  return asksForBundle || (mentionsUseCase && mentionsBudget);
 };
 
 const getStockBadge = (stock) => {
@@ -66,10 +77,12 @@ export default function Home() {
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantError, setAssistantError] = useState("");
   const [assistantResult, setAssistantResult] = useState(null);
+  const [bundleCartMessage, setBundleCartMessage] = useState("");
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [areFiltersOpen, setAreFiltersOpen] = useState(false);
 
   const addToCart = useCartStore((state) => state.addToCart);
+  const addManyToCart = useCartStore((state) => state.addManyToCart);
 
   // Product data reloads only when the page or submitted filters change.
   useEffect(() => {
@@ -77,7 +90,7 @@ export default function Home() {
       setLoading(true);
       setError("");
       try {
-        const response = await axios.get(`${API_BASE}/api/products`, {
+        const response = await api.get("/api/products", {
           params: {
             page: currentPage,
             limit: 8,
@@ -138,26 +151,31 @@ export default function Home() {
     const trimmedMessage = message.trim();
 
     if (!trimmedMessage) {
-      setAssistantError("Ask for a product, category, or budget.");
+      setAssistantError("Ask for a product or describe a setup with a budget.");
       return;
     }
 
     setAssistantLoading(true);
     setAssistantError("");
+    setBundleCartMessage("");
 
     try {
-      const response = await axios.post(
-        `${API_BASE}/api/ai/shopping-assistant`,
-        { message: trimmedMessage },
-      );
+      const mode = isBundleAssistantQuery(trimmedMessage)
+        ? "bundle"
+        : "recommendations";
+      const endpoint =
+        mode === "bundle"
+          ? "/api/ai/cart-builder"
+          : "/api/ai/shopping-assistant";
+      const response = await api.post(endpoint, { message: trimmedMessage });
 
-      setAssistantResult(response.data);
+      setAssistantResult({ ...response.data, mode });
       setAssistantInput(trimmedMessage);
     } catch (err) {
       const message =
         err.response?.data?.message ||
         err.message ||
-        "The assistant could not answer right now.";
+        "The AI shopping assistant could not answer right now.";
 
       setAssistantError(message);
     } finally {
@@ -172,6 +190,17 @@ export default function Home() {
 
   const handleExampleQuery = (query) => {
     askAssistant(query);
+  };
+
+  const handleAddBundle = () => {
+    if (!assistantResult?.items?.length) {
+      return;
+    }
+
+    addManyToCart(assistantResult.items);
+    setBundleCartMessage(
+      "Cart updated with the available bundle quantities.",
+    );
   };
 
   return (
@@ -196,29 +225,35 @@ export default function Home() {
           <div className={styles.assistantHeader}>
             <div>
               <h2>AI Shopping Assistant</h2>
-              <p>Ask for products by name, category, or budget.</p>
+              <p>
+                Find a product, or describe a setup and budget to build a
+                complete in-stock bundle.
+              </p>
             </div>
 
             <div className={styles.assistantHeaderActions}>
-              {assistantResult?.source ? (
+              {assistantResult?.source && (
                 <span className={styles.assistantSource}>
                   {assistantSourceLabels[assistantResult.source] || "AI"}
                 </span>
-              ) : null}
+              )}
 
               <button
                 type="button"
                 className={styles.assistantToggle}
                 aria-expanded={isAssistantOpen}
-                aria-controls="shopping-assistant-body"
-                onClick={() => setIsAssistantOpen((prev) => !prev)}
+                aria-controls="ai-shopping-assistant-body"
+                onClick={() => setIsAssistantOpen((previous) => !previous)}
               >
                 {isAssistantOpen ? "Hide AI" : "Ask AI"}
               </button>
             </div>
           </div>
 
-          <div id="shopping-assistant-body" className={styles.assistantBody}>
+          <div
+            id="ai-shopping-assistant-body"
+            className={styles.assistantBody}
+          >
             <form
               className={styles.assistantForm}
               onSubmit={handleAssistantSubmit}
@@ -227,12 +262,12 @@ export default function Home() {
                 type="text"
                 value={assistantInput}
                 onChange={(event) => setAssistantInput(event.target.value)}
-                placeholder="Try: mouse under 2000"
+                placeholder="Try: mouse, or office setup under 5000"
                 maxLength={300}
               />
 
               <button type="submit" disabled={assistantLoading}>
-                {assistantLoading ? "Asking..." : "Ask"}
+                {assistantLoading ? "Thinking..." : "Ask AI"}
               </button>
             </form>
 
@@ -255,31 +290,110 @@ export default function Home() {
 
             {assistantResult && !assistantError && (
               <div className={styles.assistantResponse}>
-                <p>{assistantResult.message}</p>
+                {assistantResult.mode === "recommendations" ? (
+                  <>
+                    <p>{assistantResult.message}</p>
 
-                {assistantResult.products?.length > 0 && (
-                  <ul className={styles.assistantProducts}>
-                    {assistantResult.products.map((product) => (
-                      <li
-                        key={product._id}
-                        className={styles.assistantProductCard}
-                      >
-                        <Link href={`/products/${product._id}`}>
-                          <strong>{product.name}</strong>
-                          <span>Rs. {product.price}</span>
-                          <small>{product.category}</small>
-                        </Link>
+                    {assistantResult.products?.length > 0 ? (
+                      <ul className={styles.assistantProducts}>
+                        {assistantResult.products.map((product) => (
+                          <li
+                            key={product._id}
+                            className={`${styles.assistantProductCard} ${styles.recommendationCard}`}
+                          >
+                            <Link href={`/products/${product._id}`}>
+                              <strong>{product.name}</strong>
+                              <span>Rs. {product.price}</span>
+                              <small>{product.category}</small>
+                            </Link>
 
+                            <button
+                              type="button"
+                              onClick={() => addToCart(product)}
+                              disabled={product.stock === 0}
+                            >
+                              {product.stock > 0 ? "Add" : "Out"}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No matching products were found.</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <dl className={styles.bundleSummary}>
+                      <div>
+                        <dt>Budget</dt>
+                        <dd>Rs. {assistantResult.budget}</dd>
+                      </div>
+
+                      <div>
+                        <dt>Bundle total</dt>
+                        <dd>Rs. {assistantResult.totalPrice}</dd>
+                      </div>
+
+                      <div>
+                        <dt>Remaining</dt>
+                        <dd>Rs. {assistantResult.remainingBudget}</dd>
+                      </div>
+                    </dl>
+
+                    {assistantResult.items?.length > 0 ? (
+                      <ul className={styles.assistantProducts}>
+                        {assistantResult.items.map(
+                          ({ product, quantity, reason }) => (
+                            <li
+                              key={product._id}
+                              className={styles.assistantProductCard}
+                            >
+                              <Link href={`/products/${product._id}`}>
+                                <strong>{product.name}</strong>
+                                <span>
+                                  Rs. {product.price} &middot; Qty {quantity}
+                                </span>
+                                <small>{reason}</small>
+                              </Link>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    ) : (
+                      <p>No products could fit this bundle.</p>
+                    )}
+
+                    {assistantResult.skippedCategories?.length > 0 && (
+                      <div className={styles.skippedCategories}>
+                        <strong>Could not include</strong>
+                        <ul>
+                          {assistantResult.skippedCategories.map(
+                            (skipped, index) => (
+                              <li key={`${skipped.category}-${index}`}>
+                                {skipped.category}: {skipped.reason}
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
+                    {assistantResult.items?.length > 0 && (
+                      <div className={styles.bundleActions}>
                         <button
                           type="button"
-                          onClick={() => addToCart(product)}
-                          disabled={product.stock === 0}
+                          className={styles.bundleAddButton}
+                          onClick={handleAddBundle}
                         >
-                          {product.stock > 0 ? "Add" : "Out"}
+                          Add all to cart
                         </button>
-                      </li>
-                    ))}
-                  </ul>
+
+                        {bundleCartMessage && (
+                          <span role="status">{bundleCartMessage}</span>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

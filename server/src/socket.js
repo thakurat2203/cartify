@@ -1,7 +1,8 @@
 const { Server } = require("socket.io");
-const jwt = require("jsonwebtoken");
 const config = require("./config");
 const Order = require("./models/Order");
+const cookieParser = require("./middlewares/cookieParser");
+const { verifyAccessToken } = require("./utils/authTokens");
 
 let io;
 
@@ -15,15 +16,40 @@ const initializeSocket = (server, allowedOrigins) => {
     },
   });
 
-  io.on("connection", (socket) => {
-    socket.on("order:join", async ({ orderId, token }) => {
+  // Authenticate once during the Socket.IO handshake using the access cookie.
+  io.use((socket, next) => {
+    cookieParser(socket.request, null, () => {
+      const accessToken =
+        socket.request.cookies?.[config.accessCookieName];
+
+      if (!accessToken) {
+        next(new Error("Authentication required for live updates."));
+        return;
+      }
+
       try {
-        if (!orderId || !token) {
-          socket.emit("order:error", "Order id and token are required.");
+        const decoded = verifyAccessToken(accessToken);
+
+        socket.user = {
+          userId: decoded.userId,
+          role: decoded.role,
+        };
+
+        next();
+      } catch {
+        next(new Error("Live-update session is invalid or expired."));
+      }
+    });
+  });
+
+  io.on("connection", (socket) => {
+    socket.on("order:join", async ({ orderId }) => {
+      try {
+        if (!orderId) {
+          socket.emit("order:error", "Order id is required.");
           return;
         }
 
-        const decoded = jwt.verify(token, config.jwtSecret);
         const order = await Order.findById(orderId);
 
         if (!order) {
@@ -31,8 +57,8 @@ const initializeSocket = (server, allowedOrigins) => {
           return;
         }
 
-        const isOwner = order.user.toString() === decoded.userId;
-        const isAdmin = decoded.role === "admin";
+        const isOwner = order.user.toString() === socket.user.userId;
+        const isAdmin = socket.user.role === "admin";
 
         if (!isOwner && !isAdmin) {
           socket.emit("order:error", "You cannot watch this order.");

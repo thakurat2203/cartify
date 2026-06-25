@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -18,9 +18,6 @@ import {
   validateShippingMethod,
 } from "@/utils/validation";
 import styles from "./page.module.css";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 const shippingOptions = [
   { value: "standard", label: "Standard delivery", fee: 49 },
@@ -46,10 +43,12 @@ export default function CheckoutPage() {
   const cartReady = useCartStore((state) => state.cartReady);
   const clearCart = useCartStore((state) => state.clearCart);
   const { totalItems, totalPrice } = getCartTotals(cart);
-  const { isAuthenticated, authLoading, token } = useAuth();
+  const { user, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState(initialFormState);
+  const [formTouched, setFormTouched] = useState(false);
+  const [formPrefilled, setFormPrefilled] = useState(false);
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -72,6 +71,44 @@ export default function CheckoutPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
+  useEffect(() => {
+    if (
+      authLoading ||
+      !isAuthenticated ||
+      !user ||
+      formTouched ||
+      formPrefilled
+    ) {
+      return;
+    }
+
+    const savedAddresses = Array.isArray(user.addresses)
+      ? user.addresses
+      : [];
+    const defaultAddress =
+      savedAddresses.find((address) => address.isDefault) || savedAddresses[0];
+
+    setForm((prev) => ({
+      ...prev,
+      fullName: user.name || prev.fullName,
+      email: user.email || prev.email,
+      phone: user.phone || prev.phone,
+      addressLine1: defaultAddress?.addressLine1 || prev.addressLine1,
+      addressLine2: defaultAddress?.addressLine2 || prev.addressLine2,
+      city: defaultAddress?.city || prev.city,
+      state: defaultAddress?.state || prev.state,
+      postalCode: defaultAddress?.postalCode || prev.postalCode,
+      country: defaultAddress?.country || prev.country,
+    }));
+    setFormPrefilled(true);
+  }, [
+    authLoading,
+    formPrefilled,
+    formTouched,
+    isAuthenticated,
+    user,
+  ]);
+
   if (authLoading || !cartReady) {
     return (
       <div className={styles.page}>
@@ -88,6 +125,7 @@ export default function CheckoutPage() {
   }
 
   const handleChange = (e) => {
+    setFormTouched(true);
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -145,8 +183,8 @@ export default function CheckoutPage() {
         quantity: item.quantity,
       }));
 
-      const response = await axios.post(
-        `${API_BASE}/api/orders`,
+      const response = await api.post(
+        "/api/orders",
         {
           orderItems,
           shippingInfo: {
@@ -162,17 +200,14 @@ export default function CheckoutPage() {
           },
           shippingMethod,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
       );
 
       const createdOrder = response.data.order;
 
       clearCart();
       setForm(initialFormState);
+      setFormTouched(false);
+      setFormPrefilled(false);
       setShippingMethod("standard");
 
       router.push(`/orders/${createdOrder._id}`);

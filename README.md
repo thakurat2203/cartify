@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/thakurat2203/cartify/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thakurat2203/cartify/actions/workflows/ci.yml)
 
-Cartify is a MERN-style e-commerce application with a Next.js frontend, an Express API, MongoDB persistence, JWT authentication, role-based admin tools, live order status updates, and an AI shopping assistant.
+Cartify is a MERN-style e-commerce application with a Next.js frontend, an Express API, MongoDB persistence, JWT authentication, role-based admin tools, live order status updates, and a dual-mode AI shopping assistant.
 
 ## Live Deployment
 
@@ -30,7 +30,7 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 
 - User registration, login, and session persistence
 - Product catalog with search, category, price filters, sorting, and pagination
-- AI shopping assistant for product recommendations by name, category, or budget
+- Dual-mode AI assistant for product recommendations and budget-safe setup bundles
 - Product detail pages with image fallback UI
 - Persistent shopping cart with stock-aware quantity controls
 - Checkout with shipping details, shipping method, and fee summary
@@ -161,12 +161,6 @@ curl -i https://cartify-backend-lg8z.onrender.com/health
 curl -i "https://cartify-backend-lg8z.onrender.com/api/products?limit=1"
 ```
 
-Operational docs:
-
-- [Deployment and CD guide](docs/deployment-cd-guide.md)
-- [Monitoring and debugging checklist](docs/monitoring-debugging-checklist.md)
-- [Security and production readiness checklist](docs/production-readiness-checklist.md)
-
 ## Project Structure
 
 ```text
@@ -223,8 +217,10 @@ Create `server/.env` from `server/.env.example`:
 
 ```env
 MONGO_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=replace_with_a_secret_at_least_32_characters
-JWT_EXPIRE=1d
+JWT_ACCESS_SECRET=replace_with_a_random_secret_at_least_32_characters
+JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
+JWT_ACCESS_EXPIRE=15m
+JWT_REFRESH_EXPIRE=30d
 NODE_ENV=development
 PORT=5000
 CLIENT_URL=http://localhost:3000
@@ -309,19 +305,28 @@ Supported product query parameters:
 
 - `GET /api/admin/dashboard` - admin only
 
-### AI Shopping Assistant
+### AI Shopping Assistant And Cart Builder
 
 - `POST /api/ai/shopping-assistant`
+- `POST /api/ai/cart-builder`
 
-Request:
+Simple product request:
 
 ```json
 {
-  "message": "mouse under 2000"
+  "message": "mouse"
 }
 ```
 
-The assistant uses Gemini when `GEMINI_API_KEY` is set. If it is not set or the Gemini request fails, the backend uses the local fallback parser and still returns product recommendations from the catalog.
+Bundle request:
+
+```json
+{
+  "message": "Build me an office setup under 5000"
+}
+```
+
+The storefront automatically sends product searches to the shopping-assistant endpoint and setup requests to the cart-builder endpoint. Both use Gemini when configured and fall back to local parsing. Product recommendations come from catalog filters; bundle products are selected deterministically from current in-stock database records so AI cannot invent names, prices, or stock. Both endpoints share a dedicated AI rate limit.
 
 ### Health
 
@@ -342,10 +347,6 @@ Server to client:
 - `order:error` - emitted when a socket join is rejected
 
 ## Deployment Notes
-
-Detailed deployment and CD notes are available in [docs/deployment-cd-guide.md](docs/deployment-cd-guide.md).
-Production monitoring and debugging steps are available in [docs/monitoring-debugging-checklist.md](docs/monitoring-debugging-checklist.md).
-Security and production readiness checks are available in [docs/production-readiness-checklist.md](docs/production-readiness-checklist.md).
 
 ### Vercel Frontend
 
@@ -378,8 +379,10 @@ Required production environment variables:
 
 ```env
 MONGO_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=replace_with_a_secret_at_least_32_characters
-JWT_EXPIRE=1d
+JWT_ACCESS_SECRET=replace_with_a_random_secret_at_least_32_characters
+JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
+JWT_ACCESS_EXPIRE=15m
+JWT_REFRESH_EXPIRE=30d
 NODE_ENV=production
 PORT=5000
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
@@ -387,7 +390,7 @@ GEMINI_API_KEY=your_gemini_api_key_if_using_ai
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-`GEMINI_API_KEY` is optional. Without it, the shopping assistant uses fallback filter parsing.
+`GEMINI_API_KEY` is optional. Without it, both AI modes use local fallback parsing.
 
 ## Scripts
 
@@ -407,4 +410,4 @@ npm start
 npm run seed
 ```
 
-Last updated: June 17, 2026
+Last updated: June 25, 2026

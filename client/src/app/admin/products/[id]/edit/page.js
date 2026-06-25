@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,12 +17,9 @@ import {
 } from "@/utils/validation";
 import styles from "./page.module.css";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-
 export default function EditProductPage({ params }) {
   const { id } = use(params);
-  const { user, token, isAuthenticated, authLoading } = useAuth();
+  const { user, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -54,7 +51,7 @@ export default function EditProductPage({ params }) {
 
     const loadProduct = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/products/${id}`);
+        const response = await api.get(`/api/products/${id}`);
         const product = response.data;
 
         setForm({
@@ -148,8 +145,8 @@ export default function EditProductPage({ params }) {
       setSubmitting(true);
       setMessage("");
 
-      await axios.put(
-        `${API_BASE}/api/products/${id}`,
+      await api.put(
+        `/api/products/${id}`,
         {
           name: form.name,
           price: Number(form.price),
@@ -157,11 +154,6 @@ export default function EditProductPage({ params }) {
           category: form.category,
           stock: Number(form.stock),
           image: form.image,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         },
       );
 

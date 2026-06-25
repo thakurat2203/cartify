@@ -2,15 +2,12 @@
 
 /* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import styles from "./page.module.css";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 const STOCK_FILTERS = [
   { value: "all", label: "All products" },
@@ -34,7 +31,7 @@ const getStockStatus = (stock) => {
 };
 
 export default function AdminProductsPage() {
-  const { user, token, isAuthenticated, authLoading } = useAuth();
+  const { user, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [products, setProducts] = useState([]);
@@ -58,7 +55,7 @@ export default function AdminProductsPage() {
 
     const loadProducts = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/products`, {
+        const response = await api.get("/api/products", {
           params: {
             limit: 50,
           },
@@ -92,11 +89,7 @@ export default function AdminProductsPage() {
     }
 
     try {
-      await axios.delete(`${API_BASE}/api/products/${productId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/api/products/${productId}`);
 
       setProducts((prev) =>
         prev.filter((product) => product._id !== productId),

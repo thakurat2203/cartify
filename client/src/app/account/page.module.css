@@ -1,0 +1,288 @@
+.page {
+  max-width: 1200px;
+  margin: 46px auto;
+  padding: 0 24px 72px;
+  color: var(--foreground);
+}
+
+.shell {
+  display: grid;
+  gap: 24px;
+}
+
+.headerRow,
+.sectionHeader,
+.ordersCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.card,
+.ordersCard {
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.06), transparent 42%),
+    var(--surface);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.field,
+.fieldWide {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldWide,
+.checkboxRow,
+.formActions,
+.primaryButton,
+.error,
+.success {
+  grid-column: 1 / -1;
+}
+
+.field label,
+.fieldWide label {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+}
+
+.readOnlyInput {
+  color: var(--muted-strong);
+  background: var(--surface-muted);
+}
+
+.primaryButton,
+.secondaryButton,
+.primaryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.primaryButton,
+.primaryLink {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+.primaryButton:hover:not(:disabled),
+.primaryLink:hover {
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+}
+
+.secondaryButton {
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+}
+
+.message,
+.emptyState,
+.ordersText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.error,
+.success {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.error {
+  color: #991b1b;
+  background: var(--danger-soft);
+}
+
+.success {
+  color: #065f46;
+  background: var(--success-soft);
+}
+
+.addressGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 24px;
+}
+
+.checkboxRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted-strong);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.checkboxRow input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.addressList {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.addressCard {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+}
+
+.addressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.addressHeader h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.defaultBadge {
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  padding: 5px 9px;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.addressText {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 14px;
+}
+
+.addressActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.textButton,
+.dangerButton {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.textButton {
+  color: var(--primary);
+}
+
+.textButton:hover:not(:disabled) {
+  background: var(--primary-soft);
+}
+
+.dangerButton {
+  color: var(--danger);
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.ordersCard {
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .addressGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    margin-top: 36px;
+    padding: 0 16px 48px;
+  }
+
+  .headerRow,
+  .ordersCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .card,
+  .ordersCard {
+    padding: 20px;
+  }
+
+  .form {
+    grid-template-columns: 1fr;
+  }
+}

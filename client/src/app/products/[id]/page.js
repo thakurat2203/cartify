@@ -4,12 +4,9 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
+import api from "@/lib/api";
 import { useCartStore } from "@/store/cart-store";
 import styles from "./page.module.css";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 const getStockBadge = (stock) => {
   const quantity = Number(stock);
@@ -43,7 +40,7 @@ export default function ProductDetailPage({ params }) {
       setImageUnavailable(false);
 
       try {
-        const response = await axios.get(`${API_BASE}/api/products/${id}`);
+        const response = await api.get(`/api/products/${id}`);
         setProduct(response.data);
       } catch (err) {
         const message =
@@ -63,6 +60,7 @@ export default function ProductDetailPage({ params }) {
     <div className={styles.page}>
       <div className={styles.shell}>
         <Link href="/" className={styles.backLink}>
+          <span aria-hidden="true">&larr;</span>
           Back to catalog
         </Link>
 

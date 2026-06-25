@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,7 @@ const formatStatus = (status) =>
 
 export default function OrderDetailsPage({ params }) {
   const { id } = use(params);
-  const { token, isAuthenticated, authLoading } = useAuth();
+  const { isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [order, setOrder] = useState(null);
@@ -42,11 +42,7 @@ export default function OrderDetailsPage({ params }) {
 
     const loadOrder = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/orders/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get(`/api/orders/${id}`);
 
         setOrder(response.data.order);
       } catch (err) {
@@ -58,23 +54,42 @@ export default function OrderDetailsPage({ params }) {
       }
     };
 
-    if (token && id) {
+    if (isAuthenticated && id) {
       loadOrder();
     }
-  }, [authLoading, id, isAuthenticated, router, token]);
+  }, [authLoading, id, isAuthenticated, router]);
 
   useEffect(() => {
-    if (!token || !id || !orderLoaded) {
+    if (!id || !orderLoaded) {
       return;
     }
 
     const socket = io(API_BASE, {
       transports: ["websocket"],
+      withCredentials: true,
     });
 
-    socket.emit("order:join", {
-      orderId: id,
-      token,
+    let refreshAttempted = false;
+
+    socket.on("connect", () => {
+      refreshAttempted = false;
+      socket.emit("order:join", { orderId: id });
+    });
+
+    socket.on("connect_error", async (connectionError) => {
+      if (refreshAttempted) {
+        setLiveMessage(connectionError.message);
+        return;
+      }
+
+      refreshAttempted = true;
+
+      try {
+        await api.post("/api/auth/refresh");
+        socket.connect();
+      } catch {
+        setLiveMessage("Live updates are unavailable. Please log in again.");
+      }
     });
 
     socket.on("order:status-updated", (data) => {
@@ -107,7 +122,7 @@ export default function OrderDetailsPage({ params }) {
       });
       socket.disconnect();
     };
-  }, [id, orderLoaded, token]);
+  }, [id, orderLoaded]);
 
   if (authLoading || loading) {
     return (

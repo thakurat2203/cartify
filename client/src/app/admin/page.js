@@ -1,14 +1,11 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import styles from "./page.module.css";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString()}`;
 
@@ -16,7 +13,7 @@ const formatStatus = (status) =>
   status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
 
 export default function AdminDashboardPage() {
-  const { user, token, isAuthenticated, authLoading } = useAuth();
+  const { user, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [dashboard, setDashboard] = useState(null);
@@ -38,11 +35,7 @@ export default function AdminDashboardPage() {
     // Dashboard combines order, revenue, and stock summaries from the API.
     const loadDashboard = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/admin/dashboard`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get("/api/admin/dashboard");
 
         setDashboard(response.data.dashboard);
       } catch (err) {
@@ -56,10 +49,10 @@ export default function AdminDashboardPage() {
       }
     };
 
-    if (isAuthenticated && user?.role === "admin" && token) {
+    if (isAuthenticated && user?.role === "admin") {
       loadDashboard();
     }
-  }, [authLoading, isAuthenticated, router, token, user]);
+  }, [authLoading, isAuthenticated, router, user]);
 
   if (authLoading || loading) {
     return (

@@ -60,6 +60,65 @@ export const useCartStore = create(
           };
         }),
 
+      addManyToCart: (bundleItems) =>
+        set((state) => {
+          if (!Array.isArray(bundleItems) || bundleItems.length === 0) {
+            return state;
+          }
+
+          const nextCart = state.cart.map((item) => ({ ...item }));
+
+          for (const bundleItem of bundleItems) {
+            const product = bundleItem?.product;
+            const productId = product?._id;
+            const availableStock = Number(product?.stock);
+
+            const requestedQuantity = Math.max(
+              1,
+              Number.parseInt(bundleItem?.quantity, 10) || 1,
+            );
+
+            if (
+              !productId ||
+              !Number.isInteger(availableStock) ||
+              availableStock < 1 ||
+              !Number.isFinite(Number(product.price))
+            ) {
+              continue;
+            }
+
+            const existingIndex = nextCart.findIndex(
+              (item) => String(item.id) === String(productId),
+            );
+
+            if (existingIndex >= 0) {
+              const existingItem = nextCart[existingIndex];
+
+              nextCart[existingIndex] = {
+                ...existingItem,
+                price: Number(product.price),
+                stock: availableStock,
+                quantity: Math.min(
+                  existingItem.quantity + requestedQuantity,
+                  availableStock,
+                ),
+              };
+
+              continue;
+            }
+
+            nextCart.push({
+              id: productId,
+              name: product.name,
+              price: Number(product.price),
+              stock: availableStock,
+              quantity: Math.min(requestedQuantity, availableStock),
+            });
+          }
+
+          return { cart: nextCart };
+        }),
+
       updateQuantity: (id, nextQty, maxStock) =>
         set((state) => {
           const currentItem = state.cart.find((item) => item.id === id);

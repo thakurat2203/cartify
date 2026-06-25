@@ -1,24 +1,22 @@
-const jwt = require("jsonwebtoken");
 const config = require("../config");
+const { verifyAccessToken } = require("../utils/authTokens");
 const sendErrorResponse = require("../utils/errorResponse");
 
-// Attach the verified JWT claims used by downstream controllers and role checks.
+// Attach verified access-token claims for controllers and role checks.
 const protect = (req, res, next) => {
+  const accessToken = req.cookies?.[config.accessCookieName];
+
+  if (!accessToken) {
+    sendErrorResponse(res, {
+      statusCode: 401,
+      message: "Not authorized, access token missing",
+      code: "AUTH_TOKEN_MISSING",
+    });
+    return;
+  }
+
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      sendErrorResponse(res, {
-        statusCode: 401,
-        message: "Not authorized, token missing",
-        code: "AUTH_TOKEN_MISSING",
-      });
-      return;
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    const decoded = jwt.verify(token, config.jwtSecret);
+    const decoded = verifyAccessToken(accessToken);
 
     req.user = {
       userId: decoded.userId,
@@ -27,10 +25,16 @@ const protect = (req, res, next) => {
 
     next();
   } catch (err) {
+    const tokenExpired = err.name === "TokenExpiredError";
+
     sendErrorResponse(res, {
       statusCode: 401,
-      message: "Not authorized, token invalid",
-      code: "AUTH_TOKEN_INVALID",
+      message: tokenExpired
+        ? "Not authorized, access token expired"
+        : "Not authorized, access token invalid",
+      code: tokenExpired
+        ? "AUTH_TOKEN_EXPIRED"
+        : "AUTH_TOKEN_INVALID",
     });
   }
 };

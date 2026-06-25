@@ -1,6 +1,6 @@
 # Cartify Server - Express API
 
-The Cartify server is an Express 5 API for authentication, products, orders, admin dashboard metrics, inventory handling, live order status updates, and AI-powered shopping recommendations.
+The Cartify server is an Express 5 API for authentication, products, orders, admin dashboard metrics, inventory handling, live order status updates, AI-powered recommendations, and budget-safe cart bundles.
 
 ## Live Deployment
 
@@ -22,7 +22,7 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 - Product listing, filtering, sorting, pagination, details, and admin CRUD
 - Order creation, customer order history, order details, admin order list, and admin status updates
 - Admin dashboard metrics for products, orders, revenue, active orders, and stock health
-- AI shopping assistant endpoint backed by Gemini when configured, with fallback parsing when Gemini is unavailable
+- Dual AI endpoints for product recommendations and deterministic budget-safe bundles, both with Gemini and local fallback parsing
 - Health check endpoint at `/health`
 
 ### Security And Reliability
@@ -129,8 +129,10 @@ Create `.env` from `.env.example`:
 
 ```env
 MONGO_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=replace_with_a_secret_at_least_32_characters
-JWT_EXPIRE=1d
+JWT_ACCESS_SECRET=replace_with_a_random_secret_at_least_32_characters
+JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
+JWT_ACCESS_EXPIRE=15m
+JWT_REFRESH_EXPIRE=30d
 NODE_ENV=development
 PORT=5000
 CLIENT_URL=http://localhost:3000
@@ -138,9 +140,9 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-`MONGO_URI` and `JWT_SECRET` are required. `CLIENT_URL` is also required when `NODE_ENV=production`.
+`MONGO_URI`, `JWT_ACCESS_SECRET`, and `JWT_REFRESH_SECRET` are required. `CLIENT_URL` is also required when `NODE_ENV=production`.
 
-`GEMINI_API_KEY` is optional. If it is not set, the AI shopping assistant still works through the local fallback parser.
+`GEMINI_API_KEY` is optional. If it is not set, both AI modes still work through local fallback parsing.
 
 ### Run
 
@@ -159,8 +161,10 @@ curl http://localhost:5000/health
 | Variable | Required | Description |
 | --- | --- | --- |
 | `MONGO_URI` | Yes | MongoDB connection string |
-| `JWT_SECRET` | Yes | Secret used to sign JWTs; use at least 32 characters |
-| `JWT_EXPIRE` | No | JWT expiry value, defaults to `1d` |
+| `JWT_ACCESS_SECRET` | Yes | Secret used to sign access tokens; use at least 32 characters |
+| `JWT_REFRESH_SECRET` | Yes | Different secret used to sign refresh tokens; use at least 32 characters |
+| `JWT_ACCESS_EXPIRE` | No | Access-token expiry, defaults to `15m` |
+| `JWT_REFRESH_EXPIRE` | No | Refresh-token expiry, defaults to `30d` |
 | `NODE_ENV` | No | `development` or `production` |
 | `PORT` | No | Server port, defaults to `5000` |
 | `CLIENT_URL` | Production | Frontend origin allowed by CORS |
@@ -365,18 +369,33 @@ Authorization: Bearer <admin_token>
 
 The response includes product counts, order counts, non-cancelled order value, active order count, low-stock count, out-of-stock count, orders grouped by status, recent orders, and inventory previews.
 
-### AI Shopping Assistant
+### AI Shopping Assistant And Cart Builder
+
+Use the shopping assistant for a product or category request:
 
 ```http
 POST /api/ai/shopping-assistant
 Content-Type: application/json
 
 {
-  "message": "headphones under 7000"
+  "message": "mouse under 2000"
 }
 ```
 
 Response includes the assistant message, filter source (`gemini` or `fallback`), parsed filters, and matching products.
+
+Use the cart builder for a complete setup with a total budget:
+
+```http
+POST /api/ai/cart-builder
+Content-Type: application/json
+
+{
+  "message": "Build me an office setup under 5000"
+}
+```
+
+Response includes the intent source, requested budget, selected in-stock products with reasons, total price, remaining budget, and categories skipped due to availability or budget. Gemini extracts intent only; server-side deterministic logic selects products and calculates all prices. Both endpoints share a limit of 20 AI requests per 15 minutes per client.
 
 ### Health
 
@@ -491,8 +510,10 @@ Production environment variables:
 
 ```env
 MONGO_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=replace_with_a_secret_at_least_32_characters
-JWT_EXPIRE=1d
+JWT_ACCESS_SECRET=replace_with_a_random_secret_at_least_32_characters
+JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
+JWT_ACCESS_EXPIRE=15m
+JWT_REFRESH_EXPIRE=30d
 NODE_ENV=production
 PORT=5000
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
@@ -515,4 +536,4 @@ npm start      # Start the API server
 npm run seed   # Seed sample products
 ```
 
-Last updated: June 17, 2026
+Last updated: June 25, 2026

@@ -1,14 +1,11 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import styles from "./page.module.css";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 const ORDER_STATUSES = [
   "placed",
@@ -31,7 +28,7 @@ const formatShippingMethod = (method) => {
 
 export default function AdminOrderDetailsPage({ params }) {
   const { id } = use(params);
-  const { user, token, isAuthenticated, authLoading } = useAuth();
+  const { user, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [order, setOrder] = useState(null);
@@ -53,11 +50,7 @@ export default function AdminOrderDetailsPage({ params }) {
 
     const loadOrder = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/orders/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get(`/api/orders/${id}`);
 
         setOrder(response.data.order);
       } catch (err) {
@@ -72,7 +65,7 @@ export default function AdminOrderDetailsPage({ params }) {
     if (id && isAuthenticated && user?.role === "admin") {
       loadOrder();
     }
-  }, [authLoading, id, isAuthenticated, router, token, user]);
+  }, [authLoading, id, isAuthenticated, router, user]);
 
   // The dropdown edits local state first; the update button persists the selected status.
   const handleStatusChange = (e) => {
@@ -87,14 +80,9 @@ export default function AdminOrderDetailsPage({ params }) {
       setSaving(true);
       setMessage("");
 
-      const response = await axios.put(
-        `${API_BASE}/api/orders/${id}/status`,
+      const response = await api.put(
+        `/api/orders/${id}/status`,
         { status: order.status },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
       );
 
       setOrder(response.data.order);

@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Product image URLs are admin-managed and not domain allow-listed yet. */
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,11 +17,8 @@ import {
 } from "@/utils/validation";
 import styles from "./page.module.css";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-
 export default function NewProductPage() {
-  const { user, token, isAuthenticated, authLoading } = useAuth();
+  const { user, isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -108,8 +105,8 @@ export default function NewProductPage() {
       setSubmitting(true);
       setMessage("");
 
-      await axios.post(
-        `${API_BASE}/api/products`,
+      await api.post(
+        "/api/products",
         {
           name: form.name,
           price: Number(form.price),
@@ -117,11 +114,6 @@ export default function NewProductPage() {
           category: form.category,
           stock: Number(form.stock),
           image: form.image,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         },
       );
 

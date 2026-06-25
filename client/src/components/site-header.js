@@ -28,6 +28,7 @@ export default function SiteHeader() {
             <span className={styles.userPill}>Checking session...</span>
           ) : isAuthenticated ? (
             <>
+              <Link href="/account">Account</Link>
               <Link href="/orders">My Orders</Link>
 
               {user?.role === "admin" && (

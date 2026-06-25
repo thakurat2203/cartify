@@ -144,7 +144,8 @@ Main API areas used by the client:
 - `/api/products` for catalog, product details, and admin product management
 - `/api/orders` for checkout, order history, order details, and admin order updates
 - `/api/admin/dashboard` for admin summary metrics
-- `/api/ai/shopping-assistant` for catalog recommendations
+- `/api/ai/shopping-assistant` for simple product recommendations
+- `/api/ai/cart-builder` for budget-aware setup bundles
 - `/health` for backend availability checks
 
 ## State Management

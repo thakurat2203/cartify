@@ -1,14 +1,11 @@
 "use client";
 
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import styles from "./page.module.css";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 const formatShippingMethod = (method) => {
   if (method === "express") {
@@ -19,7 +16,7 @@ const formatShippingMethod = (method) => {
 };
 
 export default function OrdersPage() {
-  const { token, isAuthenticated, authLoading } = useAuth();
+  const { isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
 
   const [orders, setOrders] = useState([]);
@@ -27,7 +24,7 @@ export default function OrdersPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Wait for auth hydration before redirecting or fetching token-protected orders.
+    // Wait for auth hydration before redirecting or fetching protected orders.
     if (!authLoading && !isAuthenticated) {
       router.push("/login");
       return;
@@ -35,11 +32,7 @@ export default function OrdersPage() {
 
     const loadOrders = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/orders/my-orders`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get("/api/orders/my-orders");
 
         setOrders(response.data.orders || []);
       } catch (err) {
@@ -51,10 +44,10 @@ export default function OrdersPage() {
       }
     };
 
-    if (token) {
+    if (isAuthenticated) {
       loadOrders();
     }
-  }, [authLoading, isAuthenticated, router, token]);
+  }, [authLoading, isAuthenticated, router]);
 
   if (authLoading || loading) {
     return (
