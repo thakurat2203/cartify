@@ -8,11 +8,14 @@ The Cartify client is a Next.js 16 application for the e-commerce storefront and
 - Backend API: https://cartify-backend-lg8z.onrender.com
 - Backend health check: https://cartify-backend-lg8z.onrender.com/health
 
-Production environment variable:
+Production API proxy target:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
+
+Browser requests stay on the frontend origin at `/api/*`; Next.js rewrites them
+to this backend target so HTTP-only auth cookies are first-party in production.
 
 ## Current Features
 
@@ -32,7 +35,7 @@ NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 
 - Register, login, and logout flows
 - Auth state managed with React Context
-- JWT stored client-side for authenticated API requests
+- JWT stored in HTTP-only cookies for authenticated API requests
 - Admin-only navigation and route checks based on user role
 
 ### Admin
@@ -136,7 +139,8 @@ The local app runs at http://localhost:3000.
 
 ## API Usage
 
-The frontend reads the API base URL from `NEXT_PUBLIC_API_BASE_URL`.
+The frontend calls same-origin `/api/*` routes. `NEXT_PUBLIC_API_BASE_URL`
+configures the Next.js rewrite destination for those requests.
 
 Main API areas used by the client:
 
@@ -169,7 +173,8 @@ Required Vercel environment variable:
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-After changing environment variables in Vercel, trigger a new deployment.
+After changing environment variables in Vercel, trigger a new deployment. The
+client bundle should continue using same-origin `/api/*` requests.
 
 ## Scripts
 

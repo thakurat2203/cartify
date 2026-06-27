@@ -72,6 +72,24 @@ export const siteHeaderStyles = {
     "rounded-lg border border-line bg-elevated px-3 py-2 text-sm font-bold text-muted-strong transition hover:border-danger/40 hover:text-danger",
 };
 
+export const productCartActionStyles = {
+  addButton: `${primaryButton} w-full`,
+  addButtonCompact:
+    "inline-flex min-h-9 min-w-20 items-center justify-center rounded-lg bg-primary px-3 py-2 text-xs font-bold text-midnight transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-55",
+  controls:
+    "grid min-h-11 w-full grid-cols-[44px_minmax(0,1fr)_44px] items-center overflow-hidden rounded-lg border-2 border-accent bg-midnight/55 text-ink shadow-lg shadow-accent/10",
+  controlsCompact:
+    "grid min-h-9 min-w-40 grid-cols-[36px_minmax(0,1fr)_36px] items-center overflow-hidden rounded-full border-2 border-accent bg-midnight/55 text-ink shadow-lg shadow-accent/10",
+  controlButton:
+    "flex h-full min-h-11 items-center justify-center px-3 text-2xl font-black text-ink transition hover:bg-accent/15 disabled:cursor-not-allowed disabled:opacity-35",
+  controlButtonCompact:
+    "flex h-full min-h-9 items-center justify-center px-2 text-xl font-black text-ink transition hover:bg-accent/15 disabled:cursor-not-allowed disabled:opacity-35",
+  controlValue:
+    "flex h-full min-h-11 items-center justify-center border-x border-accent/40 px-3 text-sm font-black text-accent",
+  controlValueCompact:
+    "flex h-full min-h-9 items-center justify-center border-x border-accent/40 px-2 text-xs font-black text-accent",
+};
+
 export const catalogStyles = {
   page,
   header:
@@ -97,7 +115,7 @@ export const catalogStyles = {
   assistantResponse: "grid gap-4 text-sm text-muted-strong",
   assistantProducts: "grid gap-3 md:grid-cols-2",
   assistantProductCard:
-    "flex items-center justify-between gap-3 rounded-xl border border-line bg-midnight/45 p-4 transition hover:border-primary/35 [&_a]:grid [&_a]:gap-1 [&_strong]:text-ink [&_span]:text-sm [&_span]:font-bold [&_span]:text-accent [&_small]:text-muted [&_button]:rounded-lg [&_button]:bg-primary [&_button]:px-3 [&_button]:py-2 [&_button]:text-xs [&_button]:font-bold [&_button]:text-midnight [&_button:disabled]:opacity-55",
+    "flex items-center justify-between gap-3 rounded-xl border border-line bg-midnight/45 p-4 transition hover:border-primary/35 [&_a]:grid [&_a]:gap-1 [&_strong]:text-ink [&_span]:text-sm [&_span]:font-bold [&_span]:text-accent [&_small]:text-muted",
   recommendationCard: "",
   bundleSummary:
     "grid gap-3 md:grid-cols-3 [&_div]:rounded-xl [&_div]:border [&_div]:border-line [&_div]:bg-midnight/45 [&_div]:p-4 [&_dt]:text-xs [&_dt]:font-bold [&_dt]:uppercase [&_dt]:tracking-wide [&_dt]:text-muted [&_dd]:mt-1 [&_dd]:text-xl [&_dd]:font-black [&_dd]:text-accent",
@@ -186,6 +204,7 @@ export const productDetailStyles = {
   lowStock: stockLow,
   outStock: stockOut,
   addButton: `${primaryButton} w-fit`,
+  detailCartAction: "w-full max-w-xs",
 };
 
 export const cartStyles = {

@@ -12,11 +12,14 @@ Cartify is a MERN-style e-commerce application with a Next.js frontend, an Expre
 | Backend API | Render | https://cartify-backend-lg8z.onrender.com |
 | Health Check | Render | https://cartify-backend-lg8z.onrender.com/health |
 
-Production client API value:
+Production frontend API proxy target:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
+
+The browser calls the frontend origin at `/api/*`; Next.js rewrites those
+requests to the backend URL above so auth cookies remain first-party.
 
 Production server CORS value:
 
@@ -100,7 +103,7 @@ docker run --name cartify-server-dev --env-file ./server/.env -p 5000:5000 carti
 Frontend image:
 
 ```bash
-docker build --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:5000 -t cartify-client:dev ./client
+docker build --build-arg NEXT_PUBLIC_API_BASE_URL=http://host.docker.internal:5000 -t cartify-client:dev ./client
 docker run --name cartify-client-dev -p 3000:3000 cartify-client:dev
 ```
 
@@ -254,17 +257,20 @@ Open http://localhost:3000.
 
 ## API Summary
 
-Production base URL:
+Production backend API URL:
 
 ```text
 https://cartify-backend-lg8z.onrender.com/api
 ```
 
-Local base URL:
+Local backend API URL:
 
 ```text
 http://localhost:5000/api
 ```
+
+The frontend itself calls same-origin `/api/*` routes and proxies them through
+Next.js.
 
 ### Auth
 
@@ -364,6 +370,9 @@ Required environment variable:
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
+
+This value is used by `next.config.mjs` as the rewrite destination. Client code
+still calls same-origin `/api/*` paths.
 
 ### Render Backend
 

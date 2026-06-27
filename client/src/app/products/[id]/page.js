@@ -5,7 +5,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
-import { useCartStore } from "@/store/cart-store";
+import ProductCartAction from "@/components/product-cart-action";
 import { productDetailStyles as styles } from "@/lib/tailwind-styles";
 
 const getStockBadge = (stock) => {
@@ -30,7 +30,6 @@ export default function ProductDetailPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageUnavailable, setImageUnavailable] = useState(false);
-  const addToCart = useCartStore((state) => state.addToCart);
 
   // Reload details when the dynamic product id changes.
   useEffect(() => {
@@ -106,15 +105,10 @@ export default function ProductDetailPage({ params }) {
                       </span>
                     </div>
 
-                    {product.stock > 0 && (
-                      <button
-                        type="button"
-                        className={styles.addButton}
-                        onClick={() => addToCart(product)}
-                      >
-                        Add to cart
-                      </button>
-                    )}
+                    <ProductCartAction
+                      product={product}
+                      className={styles.detailCartAction}
+                    />
                   </div>
                 </div>
               </article>

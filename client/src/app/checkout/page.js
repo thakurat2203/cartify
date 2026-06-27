@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { getCartTotals, useCartStore } from "@/store/cart-store";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -205,6 +206,7 @@ export default function CheckoutPage() {
       const createdOrder = response.data.order;
 
       clearCart();
+      toast.success("Order placed successfully");
       setForm(initialFormState);
       setFormTouched(false);
       setFormPrefilled(false);

@@ -8,9 +8,6 @@ import { io } from "socket.io-client";
 import { useAuth } from "@/context/auth-context";
 import { orderDetailStyles as styles } from "@/lib/tailwind-styles";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-
 const formatShippingMethod = (method) => {
   if (method === "express") {
     return "Express delivery";
@@ -64,8 +61,9 @@ export default function OrderDetailsPage({ params }) {
       return;
     }
 
-    const socket = io(API_BASE, {
-      transports: ["websocket"],
+    // Use the same-origin rewrite so cookie auth matches the REST API calls.
+    const socket = io({
+      transports: ["polling"],
       withCredentials: true,
     });
 

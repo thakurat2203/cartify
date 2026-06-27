@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
 import CartHydrator from "@/components/cart-hydrator";
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
           <CartHydrator />
           <SiteHeader />
           <main>{children}</main>
+          <Toaster closeButton richColors position="top-right" />
         </AuthProvider>
       </body>
     </html>

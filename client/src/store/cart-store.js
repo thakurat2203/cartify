@@ -1,7 +1,9 @@
 "use client";
 
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+
+const legacyCartStorageKey = "cart";
+const cartStorageKeyPrefix = "cart:";
 
 export const getCartTotals = (cart) => {
   const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -14,160 +16,232 @@ export const getCartTotals = (cart) => {
   return { totalItems, totalPrice };
 };
 
-export const useCartStore = create(
-  persist(
-    (set) => ({
-      cart: [],
-      cartReady: false,
+const canUseStorage = () =>
+  typeof window !== "undefined" && Boolean(window.localStorage);
 
-      setCartReady: (cartReady) => set({ cartReady }),
+const getCartStorageKey = (userId) => `${cartStorageKeyPrefix}${userId}`;
 
-      addToCart: (product) =>
-        set((state) => {
-          const availableStock = Number(product.stock);
+const removeLegacyCartStorage = () => {
+  if (!canUseStorage()) {
+    return;
+  }
 
-          if (!Number.isInteger(availableStock) || availableStock < 1) {
-            return state;
-          }
+  try {
+    localStorage.removeItem(legacyCartStorageKey);
+  } catch {
+    // Ignore storage cleanup failures; they should not block the cart UI.
+  }
+};
 
-          const existing = state.cart.find((item) => item.id === product._id);
+const readStoredCart = (userId) => {
+  if (!userId || !canUseStorage()) {
+    return [];
+  }
 
-          if (existing) {
-            return {
-              cart: state.cart.map((item) =>
-                item.id === product._id
-                  ? {
-                      ...item,
-                      stock: availableStock,
-                      quantity: Math.min(item.quantity + 1, availableStock),
-                    }
-                  : item,
-              ),
-            };
-          }
+  try {
+    const parsedCart = JSON.parse(
+      localStorage.getItem(getCartStorageKey(userId)) || "[]",
+    );
 
-          return {
-            cart: [
-              ...state.cart,
-              {
-                id: product._id,
-                name: product.name,
-                price: product.price,
-                stock: availableStock,
-                quantity: 1,
-              },
-            ],
-          };
-        }),
+    return Array.isArray(parsedCart) ? parsedCart : [];
+  } catch {
+    return [];
+  }
+};
 
-      addManyToCart: (bundleItems) =>
-        set((state) => {
-          if (!Array.isArray(bundleItems) || bundleItems.length === 0) {
-            return state;
-          }
+const writeStoredCart = (userId, cart) => {
+  if (!userId || !canUseStorage()) {
+    return;
+  }
 
-          const nextCart = state.cart.map((item) => ({ ...item }));
+  try {
+    localStorage.setItem(getCartStorageKey(userId), JSON.stringify(cart));
+  } catch {
+    // If browser storage is unavailable, keep the in-memory cart usable.
+  }
+};
 
-          for (const bundleItem of bundleItems) {
-            const product = bundleItem?.product;
-            const productId = product?._id;
-            const availableStock = Number(product?.stock);
+export const useCartStore = create((set) => ({
+  cart: [],
+  cartReady: false,
+  cartOwnerId: null,
 
-            const requestedQuantity = Math.max(
-              1,
-              Number.parseInt(bundleItem?.quantity, 10) || 1,
-            );
+  setCartReady: (cartReady) => set({ cartReady }),
 
-            if (
-              !productId ||
-              !Number.isInteger(availableStock) ||
-              availableStock < 1 ||
-              !Number.isFinite(Number(product.price))
-            ) {
-              continue;
-            }
+  loadCartForUser: (userId) => {
+    const nextOwnerId = userId ? String(userId) : null;
 
-            const existingIndex = nextCart.findIndex(
-              (item) => String(item.id) === String(productId),
-            );
+    removeLegacyCartStorage();
 
-            if (existingIndex >= 0) {
-              const existingItem = nextCart[existingIndex];
+    set({
+      cart: nextOwnerId ? readStoredCart(nextOwnerId) : [],
+      cartOwnerId: nextOwnerId,
+      cartReady: true,
+    });
+  },
 
-              nextCart[existingIndex] = {
-                ...existingItem,
-                price: Number(product.price),
-                stock: availableStock,
-                quantity: Math.min(
-                  existingItem.quantity + requestedQuantity,
-                  availableStock,
-                ),
-              };
+  addToCart: (product) =>
+    set((state) => {
+      if (!state.cartOwnerId) {
+        return state;
+      }
 
-              continue;
-            }
+      const availableStock = Number(product.stock);
 
-            nextCart.push({
-              id: productId,
+      if (!Number.isInteger(availableStock) || availableStock < 1) {
+        return state;
+      }
+
+      const existing = state.cart.find((item) => item.id === product._id);
+      const nextCart = existing
+        ? state.cart.map((item) =>
+            item.id === product._id
+              ? {
+                  ...item,
+                  stock: availableStock,
+                  quantity: Math.min(item.quantity + 1, availableStock),
+                }
+              : item,
+          )
+        : [
+            ...state.cart,
+            {
+              id: product._id,
               name: product.name,
-              price: Number(product.price),
+              price: product.price,
               stock: availableStock,
-              quantity: Math.min(requestedQuantity, availableStock),
-            });
-          }
+              quantity: 1,
+            },
+          ];
 
-          return { cart: nextCart };
-        }),
+      writeStoredCart(state.cartOwnerId, nextCart);
+      return { cart: nextCart };
+    }),
 
-      updateQuantity: (id, nextQty, maxStock) =>
-        set((state) => {
-          const currentItem = state.cart.find((item) => item.id === id);
-          const availableStock = Number(maxStock ?? currentItem?.stock);
+  addManyToCart: (bundleItems) =>
+    set((state) => {
+      if (
+        !state.cartOwnerId ||
+        !Array.isArray(bundleItems) ||
+        bundleItems.length === 0
+      ) {
+        return state;
+      }
 
-          if (nextQty <= 0) {
-            return { cart: state.cart.filter((item) => item.id !== id) };
-          }
+      const nextCart = state.cart.map((item) => ({ ...item }));
 
-          // Cap against locally known stock; the backend still verifies stock at checkout.
-          if (Number.isInteger(availableStock) && nextQty > availableStock) {
-            return {
-              cart: state.cart.map((item) =>
-                item.id === id ? { ...item, stock: availableStock } : item,
-              ),
-            };
-          }
+      for (const bundleItem of bundleItems) {
+        const product = bundleItem?.product;
+        const productId = product?._id;
+        const availableStock = Number(product?.stock);
 
-          return {
-            cart: state.cart.map((item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    stock: Number.isInteger(availableStock)
-                      ? availableStock
-                      : item.stock,
-                    quantity: nextQty,
-                  }
-                : item,
+        const requestedQuantity = Math.max(
+          1,
+          Number.parseInt(bundleItem?.quantity, 10) || 1,
+        );
+
+        if (
+          !productId ||
+          !Number.isInteger(availableStock) ||
+          availableStock < 1 ||
+          !Number.isFinite(Number(product.price))
+        ) {
+          continue;
+        }
+
+        const existingIndex = nextCart.findIndex(
+          (item) => String(item.id) === String(productId),
+        );
+
+        if (existingIndex >= 0) {
+          const existingItem = nextCart[existingIndex];
+
+          nextCart[existingIndex] = {
+            ...existingItem,
+            price: Number(product.price),
+            stock: availableStock,
+            quantity: Math.min(
+              existingItem.quantity + requestedQuantity,
+              availableStock,
             ),
           };
-        }),
 
-      removeFromCart: (id) =>
-        set((state) => ({
-          cart: state.cart.filter((item) => item.id !== id),
-        })),
+          continue;
+        }
 
-      clearCart: () => set({ cart: [] }),
+        nextCart.push({
+          id: productId,
+          name: product.name,
+          price: Number(product.price),
+          stock: availableStock,
+          quantity: Math.min(requestedQuantity, availableStock),
+        });
+      }
+
+      writeStoredCart(state.cartOwnerId, nextCart);
+      return { cart: nextCart };
     }),
-    {
-      name: "cart",
-      partialize: (state) => ({ cart: state.cart }),
-      // Hydrate manually so server-rendered markup never disagrees with localStorage.
-      skipHydration: true,
-      storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        state?.setCartReady(true);
-      },
-    },
-  ),
-);
+
+  updateQuantity: (id, nextQty, maxStock) =>
+    set((state) => {
+      if (!state.cartOwnerId) {
+        return state;
+      }
+
+      const currentItem = state.cart.find((item) => item.id === id);
+      const availableStock = Number(maxStock ?? currentItem?.stock);
+      let nextCart;
+
+      if (nextQty <= 0) {
+        nextCart = state.cart.filter((item) => item.id !== id);
+        writeStoredCart(state.cartOwnerId, nextCart);
+        return { cart: nextCart };
+      }
+
+      // Cap against locally known stock; the backend still verifies stock at checkout.
+      if (Number.isInteger(availableStock) && nextQty > availableStock) {
+        nextCart = state.cart.map((item) =>
+          item.id === id ? { ...item, stock: availableStock } : item,
+        );
+        writeStoredCart(state.cartOwnerId, nextCart);
+        return { cart: nextCart };
+      }
+
+      nextCart = state.cart.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              stock: Number.isInteger(availableStock)
+                ? availableStock
+                : item.stock,
+              quantity: nextQty,
+            }
+          : item,
+      );
+
+      writeStoredCart(state.cartOwnerId, nextCart);
+      return { cart: nextCart };
+    }),
+
+  removeFromCart: (id) =>
+    set((state) => {
+      if (!state.cartOwnerId) {
+        return state;
+      }
+
+      const nextCart = state.cart.filter((item) => item.id !== id);
+
+      writeStoredCart(state.cartOwnerId, nextCart);
+      return { cart: nextCart };
+    }),
+
+  clearCart: () =>
+    set((state) => {
+      if (!state.cartOwnerId) {
+        return { cart: [] };
+      }
+
+      writeStoredCart(state.cartOwnerId, []);
+      return { cart: [] };
+    }),
+}));

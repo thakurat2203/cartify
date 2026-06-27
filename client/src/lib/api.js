@@ -1,10 +1,8 @@
 import axios from "axios";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-
 const api = axios.create({
-  baseURL: API_BASE,
+  // Browser requests stay same-origin; Next rewrites /api/* to the backend.
+  baseURL: "",
   withCredentials: true,
 });
 
@@ -18,9 +16,12 @@ const notifySessionExpired = () => {
   }
 };
 
+const getApiErrorCode = (error) =>
+  error.response?.data?.error?.code || error.response?.data?.code;
+
 const shouldClearSession = (error) => {
   const status = error.response?.status;
-  const code = error.response?.data?.error?.code;
+  const code = getApiErrorCode(error);
   const url = error.config?.url || "";
 
   if (status !== 401) {
@@ -44,7 +45,7 @@ const shouldClearSession = (error) => {
 
 const shouldAttemptRefresh = (error) => {
   const status = error.response?.status;
-  const code = error.response?.data?.error?.code;
+  const code = getApiErrorCode(error);
   const url = error.config?.url || "";
 
   const skippedRoutes = [

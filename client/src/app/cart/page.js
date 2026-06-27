@@ -1,10 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
 import { getCartTotals, useCartStore } from "@/store/cart-store";
 import { cartStyles as styles } from "@/lib/tailwind-styles";
 
 export default function CartPage() {
+  const router = useRouter();
+  const { isAuthenticated, authLoading } = useAuth();
   const cart = useCartStore((state) => state.cart);
   const cartReady = useCartStore((state) => state.cartReady);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -18,7 +23,13 @@ export default function CartPage() {
   });
 
   // Wait for persisted cart hydration before showing an empty-cart state.
-  if (!cartReady) {
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/register");
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  if (authLoading || !isAuthenticated || !cartReady) {
     return (
       <div className={styles.page}>
         <div className={styles.empty}>

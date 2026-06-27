@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { catalogStyles as styles } from "@/lib/tailwind-styles";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
 import { useCartStore } from "@/store/cart-store";
+import ProductCartAction from "@/components/product-cart-action";
 
 const initialFilters = {
   search: "",
@@ -56,6 +59,7 @@ const getStockBadge = (stock) => {
 };
 
 export default function Home() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -81,7 +85,7 @@ export default function Home() {
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [areFiltersOpen, setAreFiltersOpen] = useState(false);
 
-  const addToCart = useCartStore((state) => state.addToCart);
+  const { authLoading, isAuthenticated } = useAuth();
   const addManyToCart = useCartStore((state) => state.addManyToCart);
 
   // Product data reloads only when the page or submitted filters change.
@@ -197,6 +201,11 @@ export default function Home() {
       return;
     }
 
+    if (!isAuthenticated) {
+      router.push("/register");
+      return;
+    }
+
     addManyToCart(assistantResult.items);
     setBundleCartMessage(
       "Cart updated with the available bundle quantities.",
@@ -309,13 +318,7 @@ export default function Home() {
                               <small>{product.category}</small>
                             </Link>
 
-                            <button
-                              type="button"
-                              onClick={() => addToCart(product)}
-                              disabled={product.stock === 0}
-                            >
-                              {product.stock > 0 ? "Add" : "Out"}
-                            </button>
+                            <ProductCartAction product={product} compact />
                           </li>
                         ))}
                       </ul>
@@ -386,6 +389,7 @@ export default function Home() {
                           type="button"
                           className={styles.bundleAddButton}
                           onClick={handleAddBundle}
+                          disabled={authLoading}
                         >
                           Add all to cart
                         </button>
@@ -570,14 +574,7 @@ export default function Home() {
                       </div>
                     </Link>
 
-                    <button
-                      type="button"
-                      className={styles.addButton}
-                      onClick={() => addToCart(product)}
-                      disabled={product.stock === 0}
-                    >
-                      {product.stock > 0 ? "Add to cart" : "Out of stock"}
-                    </button>
+                    <ProductCartAction product={product} />
                   </div>
                 </li>
               ))}

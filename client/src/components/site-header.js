@@ -43,18 +43,17 @@ export default function SiteHeader() {
             isMenuOpen ? styles.navOpen : styles.navClosed
           }`}
         >
-          <Link href="/" className={styles.navLink} onClick={closeMenu}>
-            Catalog
-          </Link>
-          <Link href="/cart" className={styles.navLink} onClick={closeMenu}>
-            Cart ({cartReady ? totalItems : "..."})
-          </Link>
-
           {/* Avoid showing guest/admin links until the stored session has been checked. */}
           {authLoading ? (
             <span className={styles.userPill}>Checking session...</span>
           ) : isAuthenticated ? (
             <>
+              <Link href="/" className={styles.navLink} onClick={closeMenu}>
+                Catalog
+              </Link>
+              <Link href="/cart" className={styles.navLink} onClick={closeMenu}>
+                Cart ({cartReady ? totalItems : "..."})
+              </Link>
               <Link
                 href="/account"
                 className={styles.navLink}
