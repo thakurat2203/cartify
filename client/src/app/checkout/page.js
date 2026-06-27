@@ -17,7 +17,7 @@ import {
   validateCountry,
   validateShippingMethod,
 } from "@/utils/validation";
-import styles from "./page.module.css";
+import { checkoutStyles as styles } from "@/lib/tailwind-styles";
 
 const shippingOptions = [
   { value: "standard", label: "Standard delivery", fee: 49 },
@@ -341,7 +341,7 @@ export default function CheckoutPage() {
               id="shippingMethod"
               value={shippingMethod}
               onChange={handleShippingMethodChange}
-              className={styles.input}
+              className={styles.select}
             >
               {shippingOptions.map((option) => (
                 <option key={option.value} value={option.value}>

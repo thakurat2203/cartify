@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import styles from "./page.module.css";
+import { adminProductsStyles as styles } from "@/lib/tailwind-styles";
 
 const STOCK_FILTERS = [
   { value: "all", label: "All products" },

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import styles from "./page.module.css";
+import { adminDashboardStyles as styles } from "@/lib/tailwind-styles";
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString()}`;
 

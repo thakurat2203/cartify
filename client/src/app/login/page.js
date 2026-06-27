@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { validateEmail, validatePassword } from "@/utils/validation";
-import styles from "./page.module.css";
+import { loginStyles as styles } from "@/lib/tailwind-styles";
 
 export default function LoginPage() {
   const [form, setForm] = useState({

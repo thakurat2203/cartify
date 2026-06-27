@@ -15,7 +15,7 @@ import {
   validateDescription,
   validateImageUrl,
 } from "@/utils/validation";
-import styles from "./page.module.css";
+import { adminProductFormStyles as styles } from "@/lib/tailwind-styles";
 
 export default function NewProductPage() {
   const { user, isAuthenticated, authLoading } = useAuth();

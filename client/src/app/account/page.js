@@ -15,7 +15,7 @@ import {
   validatePostalCode,
   validateState,
 } from "@/utils/validation";
-import styles from "./page.module.css";
+import { accountStyles as styles } from "@/lib/tailwind-styles";
 
 const initialAddressForm = {
   label: "Home",
@@ -352,7 +352,7 @@ export default function AccountPage() {
                 />
               </div>
 
-              <div className={styles.field}>
+              <div className={styles.fieldWide}>
                 <label htmlFor="email">Email</label>
                 <input
                   id="email"
@@ -364,7 +364,7 @@ export default function AccountPage() {
 
               <button
                 type="submit"
-                className={styles.primaryButton}
+                className={styles.profileSubmitButton}
                 disabled={profileSubmitting}
               >
                 {profileSubmitting ? "Saving..." : "Save profile"}
@@ -420,7 +420,7 @@ export default function AccountPage() {
           </section>
         </div>
 
-        <section className={styles.card}>
+        <section className={`${styles.card} ${styles.addressSection}`}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Addresses</h2>
           </div>

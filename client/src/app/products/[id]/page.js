@@ -6,7 +6,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useCartStore } from "@/store/cart-store";
-import styles from "./page.module.css";
+import { productDetailStyles as styles } from "@/lib/tailwind-styles";
 
 const getStockBadge = (stock) => {
   const quantity = Number(stock);

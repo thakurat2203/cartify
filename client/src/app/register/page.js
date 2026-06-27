@@ -9,7 +9,7 @@ import {
   validateEmail,
   validatePassword,
 } from "@/utils/validation";
-import styles from "./page.module.css";
+import { registerStyles as styles } from "@/lib/tailwind-styles";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({

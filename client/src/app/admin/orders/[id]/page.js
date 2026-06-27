@@ -5,7 +5,7 @@ import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import styles from "./page.module.css";
+import { adminOrderDetailStyles as styles } from "@/lib/tailwind-styles";
 
 const ORDER_STATUSES = [
   "placed",
@@ -32,6 +32,7 @@ export default function AdminOrderDetailsPage({ params }) {
   const router = useRouter();
 
   const [order, setOrder] = useState(null);
+  const [statusDraft, setStatusDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -53,6 +54,7 @@ export default function AdminOrderDetailsPage({ params }) {
         const response = await api.get(`/api/orders/${id}`);
 
         setOrder(response.data.order);
+        setStatusDraft(response.data.order.status);
       } catch (err) {
         const apiMessage =
           err.response?.data?.message || err.message || "Failed to load order";
@@ -67,12 +69,9 @@ export default function AdminOrderDetailsPage({ params }) {
     }
   }, [authLoading, id, isAuthenticated, router, user]);
 
-  // The dropdown edits local state first; the update button persists the selected status.
+  // The dropdown edits draft state only; the update button persists the selected status.
   const handleStatusChange = (e) => {
-    setOrder((prev) => ({
-      ...prev,
-      status: e.target.value,
-    }));
+    setStatusDraft(e.target.value);
   };
 
   const handleStatusUpdate = async () => {
@@ -82,10 +81,11 @@ export default function AdminOrderDetailsPage({ params }) {
 
       const response = await api.put(
         `/api/orders/${id}/status`,
-        { status: order.status },
+        { status: statusDraft || order.status },
       );
 
       setOrder(response.data.order);
+      setStatusDraft(response.data.order.status);
       setMessage(response.data.message || "Status updated successfully.");
     } catch (err) {
       const apiMessage =
@@ -239,7 +239,7 @@ export default function AdminOrderDetailsPage({ params }) {
               <div className={styles.statusControls}>
                 <select
                   className={styles.select}
-                  value={order.status}
+                  value={statusDraft || order.status}
                   onChange={handleStatusChange}
                 >
                   {ORDER_STATUSES.map((status) => (
@@ -253,7 +253,9 @@ export default function AdminOrderDetailsPage({ params }) {
                   type="button"
                   className={styles.submitButton}
                   onClick={handleStatusUpdate}
-                  disabled={saving}
+                  disabled={
+                    saving || (statusDraft || order.status) === order.status
+                  }
                 >
                   {saving ? "Saving..." : "Update Status"}
                 </button>

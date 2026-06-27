@@ -1,5 +1,5 @@
 import Link from "next/link";
-import styles from "./not-found.module.css";
+import { notFoundStyles as styles } from "@/lib/tailwind-styles";
 
 export default function NotFound() {
   return (

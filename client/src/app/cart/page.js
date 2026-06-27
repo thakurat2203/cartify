@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { getCartTotals, useCartStore } from "@/store/cart-store";
-import styles from "./page.module.css";
+import { cartStyles as styles } from "@/lib/tailwind-styles";
 
 export default function CartPage() {
   const cart = useCartStore((state) => state.cart);
@@ -126,18 +126,20 @@ export default function CartPage() {
 
         <div className={styles.summary}>
           <h2>Total: Rs. {totalPrice}</h2>
-          <Link href="/" className={styles.summaryLink}>
-            Continue shopping
-          </Link>
-          {stockIssue ? (
-            <span className={`${styles.summaryLink} ${styles.disabledLink}`}>
-              Proceed to checkout
-            </span>
-          ) : (
-            <Link href="/checkout" className={styles.summaryLink}>
-              Proceed to checkout
+          <div className={styles.summaryActions}>
+            <Link href="/" className={styles.summaryLink}>
+              Continue shopping
             </Link>
-          )}
+            {stockIssue ? (
+              <span className={`${styles.summaryLink} ${styles.disabledLink}`}>
+                Proceed to checkout
+              </span>
+            ) : (
+              <Link href="/checkout" className={styles.summaryLink}>
+                Proceed to checkout
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

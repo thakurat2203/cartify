@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import styles from "./page.module.css";
+import { catalogStyles as styles } from "@/lib/tailwind-styles";
 import Link from "next/link";
 import { useCartStore } from "@/store/cart-store";
 
@@ -252,7 +252,9 @@ export default function Home() {
 
           <div
             id="ai-shopping-assistant-body"
-            className={styles.assistantBody}
+            className={`${styles.assistantBody} ${
+              isAssistantOpen ? styles.assistantBodyOpen : ""
+            }`}
           >
             <form
               className={styles.assistantForm}
@@ -428,7 +430,12 @@ export default function Home() {
             </button>
           </div>
 
-          <div id="catalog-filter-fields" className={styles.filterPanel}>
+          <div
+            id="catalog-filter-fields"
+            className={`${styles.filterPanel} ${
+              areFiltersOpen ? styles.filterPanelOpen : ""
+            }`}
+          >
             <label className={styles.field}>
               <span>Category</span>
               <input

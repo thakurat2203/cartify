@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import styles from "./page.module.css";
+import { adminOrdersStyles as styles } from "@/lib/tailwind-styles";
 
 const ORDER_STATUSES = [
   "placed",
@@ -35,6 +35,7 @@ export default function AdminOrdersPage() {
   const [success, setSuccess] = useState("");
   const [updatingId, setUpdatingId] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [statusDrafts, setStatusDrafts] = useState({});
 
   useEffect(() => {
     // Admin screens must wait for auth hydration before enforcing role access.
@@ -67,13 +68,12 @@ export default function AdminOrdersPage() {
     }
   }, [authLoading, isAuthenticated, router, user]);
 
-  // The dropdown edits local state first; the save button persists the selected status.
+  // Status dropdowns edit draft state only; the button persists the selected value.
   const handleStatusChange = (orderId, nextStatus) => {
-    setOrders((prev) =>
-      prev.map((order) =>
-        order._id === orderId ? { ...order, status: nextStatus } : order,
-      ),
-    );
+    setStatusDrafts((prev) => ({
+      ...prev,
+      [orderId]: nextStatus,
+    }));
   };
 
   const handleUpdateStatus = async (orderId, status) => {
@@ -91,6 +91,11 @@ export default function AdminOrdersPage() {
           order._id === orderId ? response.data.order : order,
         ),
       );
+      setStatusDrafts((prev) => {
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
       setSuccess("Order status updated successfully!");
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
@@ -169,62 +174,73 @@ export default function AdminOrdersPage() {
 
         {!error && filteredOrders.length > 0 && (
           <ul className={styles.list}>
-            {filteredOrders.map((order) => (
-              <li key={order._id} className={styles.card}>
-                <div className={styles.cardMain}>
-                  <h2 className={styles.orderId}>Order #{order._id}</h2>
-                  <p className={styles.meta}>
-                    Customer: {order.user?.name} ({order.user?.email})
-                  </p>
-                  <p className={styles.meta}>Items: {order.totalItems}</p>
-                  <p className={styles.meta}>Total: Rs. {order.totalPrice}</p>
-                  <p className={styles.meta}>
-                    Shipping: {formatShippingMethod(order.shippingMethod)}
-                  </p>
-                  <p className={styles.meta}>
-                    Placed on: {new Date(order.createdAt).toLocaleString()}
-                  </p>
-                  <span
-                    className={`${styles.badge} ${styles[`status-${order.status}`]}`}
-                  >
-                    {order.status.charAt(0).toUpperCase() +
-                      order.status.slice(1)}
-                  </span>
-                </div>
+            {filteredOrders.map((order) => {
+              const draftStatus = statusDrafts[order._id] || order.status;
+              const hasPendingStatusChange = draftStatus !== order.status;
 
-                <div className={styles.actions}>
-                  <Link
-                    href={`/admin/orders/${order._id}`}
-                    className={styles.detailsLink}
-                  >
-                    View Details
-                  </Link>
+              return (
+                <li key={order._id} className={styles.card}>
+                  <div className={styles.cardMain}>
+                    <h2 className={styles.orderId}>Order #{order._id}</h2>
+                    <p className={styles.meta}>
+                      Customer: {order.user?.name} ({order.user?.email})
+                    </p>
+                    <p className={styles.meta}>Items: {order.totalItems}</p>
+                    <p className={styles.meta}>
+                      Total: Rs. {order.totalPrice}
+                    </p>
+                    <p className={styles.meta}>
+                      Shipping: {formatShippingMethod(order.shippingMethod)}
+                    </p>
+                    <p className={styles.meta}>
+                      Placed on: {new Date(order.createdAt).toLocaleString()}
+                    </p>
+                    <span
+                      className={`${styles.badge} ${styles[`status-${order.status}`]}`}
+                    >
+                      {order.status.charAt(0).toUpperCase() +
+                        order.status.slice(1)}
+                    </span>
+                  </div>
 
-                  <select
-                    className={styles.select}
-                    value={order.status}
-                    onChange={(e) =>
-                      handleStatusChange(order._id, e.target.value)
-                    }
-                  >
-                    {ORDER_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
+                  <div className={styles.actions}>
+                    <Link
+                      href={`/admin/orders/${order._id}`}
+                      className={styles.detailsLink}
+                    >
+                      View Details
+                    </Link>
 
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    onClick={() => handleUpdateStatus(order._id, order.status)}
-                    disabled={updatingId === order._id}
-                  >
-                    {updatingId === order._id ? "Saving..." : "Update Status"}
-                  </button>
-                </div>
-              </li>
-            ))}
+                    <select
+                      className={styles.select}
+                      value={draftStatus}
+                      onChange={(e) =>
+                        handleStatusChange(order._id, e.target.value)
+                      }
+                    >
+                      {ORDER_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={() =>
+                        handleUpdateStatus(order._id, draftStatus)
+                      }
+                      disabled={
+                        updatingId === order._id || !hasPendingStatusChange
+                      }
+                    >
+                      {updatingId === order._id ? "Saving..." : "Update Status"}
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
