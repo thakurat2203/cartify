@@ -1,6 +1,6 @@
 # Cartify Client - Next.js Frontend
 
-The Cartify client is a Next.js 16 application for the e-commerce storefront and admin UI. It connects to the Express API, manages auth state, keeps the shopping cart in local storage, and listens for live order status updates.
+The Cartify client is a Next.js 16 app for the ecommerce storefront, checkout, customer orders, account screens, and admin UI. It uses same-origin `/api/*` requests, and Next.js rewrites those requests to the Express backend.
 
 ## Live Deployment
 
@@ -14,37 +14,34 @@ Production API proxy target:
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-Browser requests stay on the frontend origin at `/api/*`; Next.js rewrites them
-to this backend target so HTTP-only auth cookies are first-party in production.
+Browser requests stay on the frontend origin at `/api/*`. This keeps HTTP-only auth cookies first-party while the backend still runs on Render.
 
-## Current Features
+## Features
 
 ### Storefront
 
-- Product catalog with search, category, price filters, sorting, and pagination
-- AI shopping assistant panel on the catalog page
-- Product cards with stock badges and image fallback UI
-- Product detail pages
-- Persistent shopping cart using Zustand and localStorage
-- Stock-aware add-to-cart and cart quantity controls
-- Checkout form with shipping details, shipping method, and fee summary
-- User order history and order detail pages
-- Live order status updates through Socket.IO
+- Product catalog with search, category, price, stock, sorting, and pagination filters.
+- Product cards and product detail pages with image fallback UI.
+- AI shopping assistant panel for recommendations and budget bundles.
+- Persistent Zustand cart with localStorage persistence.
+- Stock-aware add-to-cart and quantity controls.
+- Razorpay test-mode checkout.
+- Customer order list and order details.
+- Live order status updates through Socket.IO.
 
 ### Authentication
 
-- Register, login, and logout flows
-- Auth state managed with React Context
-- JWT stored in HTTP-only cookies for authenticated API requests
-- Admin-only navigation and route checks based on user role
+- Register, login, logout, refresh, and session restore.
+- Auth state managed with React Context.
+- API calls use `withCredentials` so HTTP-only cookies are sent.
+- Admin navigation and page access are based on authenticated user role.
 
 ### Admin
 
-- Dashboard with product, order, revenue, active order, and inventory metrics
-- Product create, edit, delete, stock, category, and image URL management
-- Order list with status filtering
-- Order detail pages with admin status updates
-- Low-stock and out-of-stock inventory visibility
+- Dashboard metrics.
+- Product create, edit, delete, stock, category, and image URL management.
+- Order list and order details with payment and fulfillment status.
+- Fulfillment controls blocked for unpaid orders.
 
 ## Tech Stack
 
@@ -53,7 +50,7 @@ to this backend target so HTTP-only auth cookies are first-party in production.
 - Zustand
 - Axios
 - Socket.IO Client
-- CSS Modules
+- Tailwind CSS classes
 - ESLint
 
 ## Project Structure
@@ -64,20 +61,24 @@ client/
 |   |-- app/
 |   |   |-- admin/             # Admin dashboard, products, and orders
 |   |   |-- cart/              # Cart page
-|   |   |-- checkout/          # Checkout flow
+|   |   |-- checkout/          # Razorpay checkout flow
 |   |   |-- login/             # Login page
 |   |   |-- orders/            # Customer order history and details
 |   |   |-- products/          # Product detail pages
 |   |   |-- register/          # Registration page
 |   |   |-- globals.css
 |   |   |-- layout.js
-|   |   `-- page.js            # Catalog and AI shopping assistant
+|   |   `-- page.js            # Catalog and AI assistant
 |   |-- components/
 |   |   |-- cart-hydrator.js
+|   |   |-- product-cart-action.js
 |   |   `-- site-header.js
 |   |-- context/
-|   |   |-- auth-context.js
-|   |   `-- cart-context.js
+|   |   `-- auth-context.js
+|   |-- lib/
+|   |   |-- api.js
+|   |   |-- razorpay.js
+|   |   `-- tailwind-styles.js
 |   |-- store/
 |   |   `-- cart-store.js
 |   `-- utils/
@@ -92,7 +93,7 @@ client/
 
 - Node.js 20.9+
 - npm
-- Backend API running locally on port `5000`, or the live Render API
+- Backend running locally on port `5000`, or a live Render backend URL
 
 ### Install
 
@@ -108,7 +109,7 @@ Create `.env.local` from `.env.example`:
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
 
-Use this value when deploying to Vercel:
+Use this value on Vercel:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
@@ -116,7 +117,7 @@ NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 
 ### Run
 
-Development server:
+Development:
 
 ```bash
 npm run dev
@@ -139,22 +140,25 @@ The local app runs at http://localhost:3000.
 
 ## API Usage
 
-The frontend calls same-origin `/api/*` routes. `NEXT_PUBLIC_API_BASE_URL`
-configures the Next.js rewrite destination for those requests.
+The frontend calls same-origin `/api/*` routes. `NEXT_PUBLIC_API_BASE_URL` configures the Next.js rewrite destination for those requests.
 
-Main API areas used by the client:
+Main API areas:
 
-- `/api/auth` for register, login, and current user
-- `/api/products` for catalog, product details, and admin product management
-- `/api/orders` for checkout, order history, order details, and admin order updates
-- `/api/admin/dashboard` for admin summary metrics
-- `/api/ai/shopping-assistant` for simple product recommendations
-- `/api/ai/cart-builder` for budget-aware setup bundles
-- `/health` for backend availability checks
+- `/api/auth` for register, login, refresh, logout, and current user.
+- `/api/products` for catalog, product details, and admin product management.
+- `/api/payments/razorpay` for creating and verifying Razorpay test-mode payments.
+- `/api/orders` for order history, order details, and admin fulfillment updates.
+- `/api/admin/dashboard` for admin summary metrics.
+- `/api/ai/shopping-assistant` for simple recommendations.
+- `/api/ai/cart-builder` for budget-aware bundles.
+- `/health` for backend availability checks.
 
 ## State Management
 
-Cart state is managed by Zustand and persisted to localStorage. Auth state is managed by React Context and provides token, user, and role data to protected pages and API calls.
+- Auth state uses React Context.
+- API credentials are HTTP-only cookies managed by the backend.
+- Cart state uses Zustand and localStorage.
+- Cart is cleared only after the backend verifies a Razorpay payment.
 
 ## Vercel Deployment
 
@@ -162,8 +166,8 @@ Use these Vercel settings:
 
 ```text
 Root Directory: client
-Build Command: npm run build
 Install Command: npm install
+Build Command: npm run build
 Output Directory: .next
 ```
 
@@ -173,16 +177,15 @@ Required Vercel environment variable:
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-After changing environment variables in Vercel, trigger a new deployment. The
-client bundle should continue using same-origin `/api/*` requests.
+After changing this environment variable, trigger a new frontend deployment.
 
 ## Scripts
 
 ```bash
-npm run dev      # Start the local development server
+npm run dev      # Start local development server
 npm run build    # Build for production
-npm start        # Start the production server
+npm start        # Start production server
 npm run lint     # Run ESLint
 ```
 
-Last updated: June 17, 2026
+Last updated: June 30, 2026

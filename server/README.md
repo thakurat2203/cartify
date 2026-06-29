@@ -1,6 +1,6 @@
 # Cartify Server - Express API
 
-The Cartify server is an Express 5 API for authentication, products, orders, admin dashboard metrics, inventory handling, live order status updates, AI-powered recommendations, and budget-safe cart bundles.
+The Cartify server is an Express 5 API for authentication, products, Razorpay test-mode payments, orders, admin dashboards, inventory handling, live order updates, and AI-powered shopping features.
 
 ## Live Deployment
 
@@ -8,43 +8,47 @@ The Cartify server is an Express 5 API for authentication, products, orders, adm
 - Health check: https://cartify-backend-lg8z.onrender.com/health
 - Frontend client: https://cartify-frontend-rouge.vercel.app
 
-Production CORS is controlled by `CLIENT_URL`:
+Production CORS is controlled by:
 
 ```env
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ```
 
-## Current Features
+## Features
 
 ### API
 
-- Auth endpoints for registration, login, and current user lookup
-- Product listing, filtering, sorting, pagination, details, and admin CRUD
-- Order creation, customer order history, order details, admin order list, and admin status updates
-- Admin dashboard metrics for products, orders, revenue, active orders, and stock health
-- Dual AI endpoints for product recommendations and deterministic budget-safe bundles, both with Gemini and local fallback parsing
-- Health check endpoint at `/health`
+- Cookie-based auth endpoints for registration, login, refresh, logout, and current user lookup.
+- Product listing, filtering, sorting, pagination, details, and admin CRUD.
+- Razorpay test-mode order creation and checkout signature verification.
+- Customer order history and order details.
+- Admin order list, order details, and paid-order fulfillment updates.
+- Admin dashboard metrics for products, orders, revenue, active orders, and stock health.
+- AI endpoints for product recommendations and budget-safe bundles.
+- Health check endpoint at `/health`.
 
 ### Security And Reliability
 
-- JWT authentication and role-based admin authorization
-- Password hashing with bcryptjs
-- Backend validation for user, product, and order data
-- Backend product price verification and checkout total calculation
-- Atomic stock reservation before order creation
-- Helmet security headers
-- Morgan request logging
-- `/api` rate limit of 300 requests per 15 minutes per client
-- JSON request body limit of 100kb
-- Structured error responses with a backward-compatible top-level `message`
+- HTTP-only access and refresh cookies.
+- Refresh sessions stored as hashes in MongoDB.
+- Refresh token rotation and logout revocation.
+- Role-based admin authorization.
+- Password hashing with bcryptjs.
+- Origin guard for state-changing `/api` requests.
+- Backend validation for user, product, checkout, and order data.
+- Server-side product price verification and checkout total calculation.
+- Atomic stock reservation before Razorpay checkout.
+- Expired pending payment cleanup and stock release.
+- Helmet security headers, Morgan request logging, rate limiting, and 100kb JSON body limit.
+- Structured API error responses.
 
 ### Realtime
 
-- Socket.IO server attached to the HTTP server
-- JWT-protected order rooms
-- Customers can join only their own order room
-- Admins can join any order room
-- Order status updates are broadcast after successful admin status changes
+- Socket.IO server attached to the HTTP server.
+- Socket handshake authenticates from the access cookie.
+- Customers can join only their own order room.
+- Admins can join any order room.
+- Order status updates are broadcast after successful admin updates.
 
 ## Tech Stack
 
@@ -53,6 +57,7 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 - MongoDB with Mongoose
 - Socket.IO
 - JSON Web Tokens
+- Razorpay SDK
 - bcryptjs
 - cors
 - dotenv
@@ -76,14 +81,18 @@ server/
 |   |   |-- authController.js
 |   |   |-- healthController.js
 |   |   |-- orderController.js
+|   |   |-- paymentController.js
 |   |   `-- productController.js
 |   |-- middlewares/
 |   |   |-- authMiddleware.js
+|   |   |-- cookieParser.js
 |   |   |-- errorHandler.js
+|   |   |-- originGuard.js
 |   |   `-- notFound.js
 |   |-- models/
 |   |   |-- Order.js
 |   |   |-- Product.js
+|   |   |-- Session.js
 |   |   `-- User.js
 |   |-- routes/
 |   |   |-- adminRoutes.js
@@ -91,16 +100,24 @@ server/
 |   |   |-- authRoutes.js
 |   |   |-- healthRoutes.js
 |   |   |-- orderRoutes.js
+|   |   |-- paymentRoutes.js
 |   |   `-- productRoutes.js
 |   |-- services/
 |   |   |-- adminService.js
+|   |   |-- aiCartBuilderService.js
 |   |   |-- aiShoppingAssistantService.js
 |   |   |-- authService.js
 |   |   |-- orderService.js
-|   |   `-- productService.js
+|   |   |-- paymentService.js
+|   |   |-- productService.js
+|   |   `-- sessionService.js
 |   |-- utils/
+|   |   |-- authCookies.js
+|   |   |-- authTokens.js
 |   |   |-- createError.js
 |   |   |-- errorResponse.js
+|   |   |-- paymentSignatures.js
+|   |   |-- publicUser.js
 |   |   `-- validation.js
 |   |-- index.js
 |   `-- socket.js
@@ -114,8 +131,9 @@ server/
 
 - Node.js 20.9+
 - npm
-- MongoDB running locally or a MongoDB Atlas connection string
-- Optional: Gemini API key for AI-powered shopping assistant responses
+- MongoDB running locally or MongoDB Atlas
+- Razorpay test key id and secret
+- Optional Gemini API key
 
 ### Install
 
@@ -128,21 +146,34 @@ npm install
 Create `.env` from `.env.example`:
 
 ```env
+PORT=5000
 MONGO_URI=mongodb://localhost:27017/ecommerce
 JWT_ACCESS_SECRET=replace_with_a_random_secret_at_least_32_characters
 JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
 JWT_ACCESS_EXPIRE=15m
 JWT_REFRESH_EXPIRE=30d
 NODE_ENV=development
-PORT=5000
 CLIENT_URL=http://localhost:3000
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_test_secret
+PAYMENT_RESERVATION_TTL_MINUTES=1
 ```
 
-`MONGO_URI`, `JWT_ACCESS_SECRET`, and `JWT_REFRESH_SECRET` are required. `CLIENT_URL` is also required when `NODE_ENV=production`.
+Required locally:
 
-`GEMINI_API_KEY` is optional. If it is not set, both AI modes still work through local fallback parsing.
+- `MONGO_URI`
+- `JWT_ACCESS_SECRET`
+- `JWT_REFRESH_SECRET`
+
+Required in production:
+
+- `CLIENT_URL`
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+
+`GEMINI_API_KEY` is optional. Without it, AI endpoints use local fallback parsing.
 
 ### Run
 
@@ -161,15 +192,18 @@ curl http://localhost:5000/health
 | Variable | Required | Description |
 | --- | --- | --- |
 | `MONGO_URI` | Yes | MongoDB connection string |
-| `JWT_ACCESS_SECRET` | Yes | Secret used to sign access tokens; use at least 32 characters |
-| `JWT_REFRESH_SECRET` | Yes | Different secret used to sign refresh tokens; use at least 32 characters |
+| `JWT_ACCESS_SECRET` | Yes | Access-token secret, at least 32 characters |
+| `JWT_REFRESH_SECRET` | Yes | Different refresh-token secret, at least 32 characters |
 | `JWT_ACCESS_EXPIRE` | No | Access-token expiry, defaults to `15m` |
 | `JWT_REFRESH_EXPIRE` | No | Refresh-token expiry, defaults to `30d` |
 | `NODE_ENV` | No | `development` or `production` |
 | `PORT` | No | Server port, defaults to `5000` |
-| `CLIENT_URL` | Production | Frontend origin allowed by CORS |
-| `GEMINI_API_KEY` | No | Enables Gemini-backed assistant parsing |
+| `CLIENT_URL` | Production | Frontend origin allowed by CORS and origin guard |
+| `GEMINI_API_KEY` | No | Enables Gemini-backed AI parsing |
 | `GEMINI_MODEL` | No | Gemini model, defaults to `gemini-2.5-flash` |
+| `RAZORPAY_KEY_ID` | Production payment | Razorpay test key id |
+| `RAZORPAY_KEY_SECRET` | Production payment | Razorpay test key secret |
+| `PAYMENT_RESERVATION_TTL_MINUTES` | No | Pending payment reservation window, currently `1` for demo |
 
 ## API Base URLs
 
@@ -189,44 +223,24 @@ http://localhost:5000/api
 
 ### Auth
 
-Register:
-
 ```http
 POST /api/auth/register
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "SecurePass123",
-  "name": "John Doe"
-}
-```
-
-Login:
-
-```http
 POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "SecurePass123"
-}
+POST /api/auth/refresh
+POST /api/auth/logout
+GET  /api/auth/me
 ```
 
-Current user:
-
-```http
-GET /api/auth/me
-Authorization: Bearer <token>
-```
+Auth uses HTTP-only cookies. Client requests should include credentials.
 
 ### Products
 
-List products:
-
 ```http
-GET /api/products
+GET    /api/products
+GET    /api/products/:id
+POST   /api/products       # admin only
+PUT    /api/products/:id   # admin only
+DELETE /api/products/:id   # admin only
 ```
 
 Supported query parameters:
@@ -242,160 +256,71 @@ Supported query parameters:
 | `page` | Page number, defaults to `1` |
 | `limit` | Products per page, defaults to `8`, max `50` |
 
-Example:
+### Payments
+
+Create a Razorpay checkout order:
 
 ```http
-GET /api/products?search=mouse&category=accessories&maxPrice=2000&stockStatus=in_stock&sort=price_asc&page=1&limit=8
-```
-
-Product details:
-
-```http
-GET /api/products/:id
-```
-
-Create product, admin only:
-
-```http
-POST /api/products
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "name": "Wireless Mouse",
-  "price": 1499,
-  "description": "Compact wireless mouse",
-  "category": "accessories",
-  "stock": 25,
-  "image": "https://example.com/mouse.jpg"
-}
-```
-
-Update product, admin only:
-
-```http
-PUT /api/products/:id
-Authorization: Bearer <admin_token>
+POST /api/payments/razorpay/order
 Content-Type: application/json
 ```
 
-Delete product, admin only:
+Verify Razorpay checkout success:
 
 ```http
-DELETE /api/products/:id
-Authorization: Bearer <admin_token>
+POST /api/payments/razorpay/verify
+Content-Type: application/json
 ```
+
+Payment notes:
+
+- The backend calculates totals from live product data.
+- The backend reserves stock before creating the Razorpay order.
+- Payment is marked paid only after signature verification.
+- Webhooks and refunds are not part of this demo scope.
 
 ### Orders
 
-Create order:
-
 ```http
-POST /api/orders
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "orderItems": [
-    {
-      "product": "507f1f77bcf86cd799439011",
-      "quantity": 2
-    }
-  ],
-  "shippingInfo": {
-    "fullName": "John Doe",
-    "email": "user@example.com",
-    "phone": "+91 9876543210",
-    "addressLine1": "123 Main Street",
-    "addressLine2": "Apartment 4B",
-    "city": "Mumbai",
-    "state": "Maharashtra",
-    "postalCode": "400001",
-    "country": "India"
-  },
-  "shippingMethod": "standard"
-}
+GET /api/orders/my-orders       # authenticated users
+GET /api/orders/:id             # owner or admin
+GET /api/orders                 # admin only
+PUT /api/orders/:id/status      # admin only
 ```
 
-`shippingMethod` must be `standard` or `express`. The server recalculates item prices, subtotal, shipping fee, platform fee, item count, and total price before saving the order.
+Direct customer order creation is disabled. Checkout goes through the payment APIs.
 
-Customer order history:
-
-```http
-GET /api/orders/my-orders
-Authorization: Bearer <token>
-```
-
-Order details:
-
-```http
-GET /api/orders/:id
-Authorization: Bearer <token>
-```
-
-All orders, admin only:
-
-```http
-GET /api/orders
-Authorization: Bearer <admin_token>
-```
-
-Update order status, admin only:
-
-```http
-PUT /api/orders/:id/status
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-
-{
-  "status": "shipped"
-}
-```
-
-Allowed statuses:
+Allowed fulfillment statuses:
 
 ```text
 placed, processing, shipped, delivered, cancelled
 ```
 
-### Admin
+Only paid orders can move to `processing`, `shipped`, or `delivered`.
 
-Dashboard summary, admin only:
+### Admin
 
 ```http
 GET /api/admin/dashboard
-Authorization: Bearer <admin_token>
 ```
 
-The response includes product counts, order counts, non-cancelled order value, active order count, low-stock count, out-of-stock count, orders grouped by status, recent orders, and inventory previews.
+### AI
 
-### AI Shopping Assistant And Cart Builder
-
-Use the shopping assistant for a product or category request:
+Simple recommendation:
 
 ```http
 POST /api/ai/shopping-assistant
 Content-Type: application/json
-
-{
-  "message": "mouse under 2000"
-}
 ```
 
-Response includes the assistant message, filter source (`gemini` or `fallback`), parsed filters, and matching products.
-
-Use the cart builder for a complete setup with a total budget:
+Budget bundle:
 
 ```http
 POST /api/ai/cart-builder
 Content-Type: application/json
-
-{
-  "message": "Build me an office setup under 5000"
-}
 ```
 
-Response includes the intent source, requested budget, selected in-stock products with reasons, total price, remaining budget, and categories skipped due to availability or budget. Gemini extracts intent only; server-side deterministic logic selects products and calculates all prices. Both endpoints share a limit of 20 AI requests per 15 minutes per client.
+Both endpoints use Gemini when configured and local fallback parsing otherwise.
 
 ### Health
 
@@ -409,7 +334,7 @@ Cartify uses Socket.IO for live order status updates.
 
 Client to server:
 
-- `order:join` with `{ orderId, token }`
+- `order:join` with `{ orderId }`
 - `order:leave` with `{ orderId }`
 
 Server to client:
@@ -417,22 +342,7 @@ Server to client:
 - `order:status-updated` with `{ orderId, status, updatedAt }`
 - `order:error` when the socket request is rejected
 
-Order rooms are JWT-protected. Customers can join only their own order room; admins can join any order room.
-
-## Error Responses
-
-API errors keep a top-level `message` and include structured details in `error`.
-
-```json
-{
-  "message": "Route not found",
-  "error": {
-    "message": "Route not found",
-    "status": 404,
-    "code": "ROUTE_NOT_FOUND"
-  }
-}
-```
+Order rooms authenticate through the Socket.IO handshake cookie.
 
 ## Database Models
 
@@ -443,8 +353,22 @@ API errors keep a top-level `message` and include structured details in `error`.
   email: String,
   password: String,
   name: String,
+  phone: String,
   role: "shopper" | "admin",
+  addresses: Array,
   createdAt: Date
+}
+```
+
+### Session
+
+```javascript
+{
+  user: ObjectId,
+  tokenHash: String,
+  familyId: String,
+  revokedAt: Date,
+  expiresAt: Date
 }
 ```
 
@@ -467,14 +391,7 @@ API errors keep a top-level `message` and include structured details in `error`.
 ```javascript
 {
   user: ObjectId,
-  orderItems: [
-    {
-      product: ObjectId,
-      name: String,
-      price: Number,
-      quantity: Number
-    }
-  ],
+  orderItems: Array,
   shippingInfo: Object,
   shippingMethod: "standard" | "express",
   subtotal: Number,
@@ -483,14 +400,17 @@ API errors keep a top-level `message` and include structured details in `error`.
   totalItems: Number,
   totalPrice: Number,
   status: "placed" | "processing" | "shipped" | "delivered" | "cancelled",
-  createdAt: Date,
-  updatedAt: Date
+  paymentStatus: "pending" | "paid" | "failed",
+  stockReservationStatus: "reserved" | "confirmed" | "released",
+  razorpayOrderId: String,
+  razorpayPaymentId: String,
+  paidAt: Date,
+  failedAt: Date,
+  stockReservationExpiresAt: Date
 }
 ```
 
 ## Database Seeding
-
-Seed sample products:
 
 ```bash
 npm run seed
@@ -515,18 +435,19 @@ JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
 JWT_ACCESS_EXPIRE=15m
 JWT_REFRESH_EXPIRE=30d
 NODE_ENV=production
-PORT=5000
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
-GEMINI_API_KEY=your_gemini_api_key_if_using_ai
+GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_test_secret
+PAYMENT_RESERVATION_TTL_MINUTES=1
 ```
 
 Operational checks:
 
 ```bash
-npm audit --audit-level=moderate
 curl -i https://cartify-backend-lg8z.onrender.com/health
-curl -i https://cartify-backend-lg8z.onrender.com/api/nope
+curl -i "https://cartify-backend-lg8z.onrender.com/api/products?limit=1"
 ```
 
 ## Scripts
@@ -536,4 +457,4 @@ npm start      # Start the API server
 npm run seed   # Seed sample products
 ```
 
-Last updated: June 25, 2026
+Last updated: June 30, 2026

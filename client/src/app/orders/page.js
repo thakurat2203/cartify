@@ -15,6 +15,9 @@ const formatShippingMethod = (method) => {
   return "Standard delivery";
 };
 
+const formatStatus = (status) =>
+  status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown";
+
 export default function OrdersPage() {
   const { isAuthenticated, authLoading } = useAuth();
   const router = useRouter();
@@ -86,9 +89,15 @@ export default function OrdersPage() {
                   <span className={styles.value}>{order._id}</span>
                 </p>
                 <p className={styles.row}>
-                  <strong className={styles.label}>Status:</strong>
+                  <strong className={styles.label}>Fulfillment:</strong>
                   <span className={`${styles.value} ${styles.statusBadge}`}>
-                    {order.status}
+                    {formatStatus(order.status)}
+                  </span>
+                </p>
+                <p className={styles.row}>
+                  <strong className={styles.label}>Payment:</strong>
+                  <span className={`${styles.value} ${styles.statusBadge}`}>
+                    {formatStatus(order.paymentStatus)}
                   </span>
                 </p>
                 <p className={styles.row}>

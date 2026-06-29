@@ -1,3 +1,4 @@
+const config = require("../config");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const createError = require("../utils/createError");
@@ -19,82 +20,207 @@ const shippingFees = {
 };
 
 const platformFee = 10;
+const fulfillmentStatuses = [
+  "placed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
+const paidOnlyFulfillmentStatuses = ["processing", "shipped", "delivered"];
 
 class OrderService {
-  async createOrder(orderData, userId) {
+  async createPendingPaymentOrder(orderData, userId) {
+    await this.releaseExpiredPaymentReservations();
+
+    const checkout = await this.buildCheckoutOrderPayload(orderData);
+    const reservedItems = await this.reserveStock(checkout.orderItems);
+    const now = new Date();
+
+    try {
+      // Razorpay checkout starts from an internal unpaid order with stock held.
+      return await Order.create({
+        user: userId,
+        ...checkout,
+        paymentStatus: "pending",
+        stockReservationStatus: "reserved",
+        stockReservedAt: now,
+        stockReservationExpiresAt: new Date(
+          now.getTime() + config.paymentReservationTtlMs,
+        ),
+      });
+    } catch (err) {
+      await this.releaseStock(reservedItems);
+      throw err;
+    }
+  }
+
+  async attachRazorpayOrderId(orderId, razorpayOrderId) {
+    if (!razorpayOrderId) {
+      throw createError("Razorpay order id is required", 400);
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      throw createError("Order not found", 404);
+    }
+
+    if (
+      order.razorpayOrderId &&
+      order.razorpayOrderId !== razorpayOrderId.trim()
+    ) {
+      throw createError("Order is already linked to another Razorpay order", 409);
+    }
+
+    order.razorpayOrderId = razorpayOrderId.trim();
+    await order.save();
+    return order;
+  }
+
+  async markOrderPaid({
+    orderId,
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+  }) {
+    const order = await this.findOrderForPaymentUpdate({
+      orderId,
+      razorpayOrderId,
+    });
+
+    if (order.paymentStatus === "paid") {
+      if (
+        (razorpayPaymentId && !order.razorpayPaymentId) ||
+        (razorpaySignature && !order.razorpaySignature)
+      ) {
+        order.razorpayPaymentId = razorpayPaymentId || order.razorpayPaymentId;
+        order.razorpaySignature = razorpaySignature || order.razorpaySignature;
+        await order.save();
+      }
+
+      return order;
+    }
+
+    if (order.paymentStatus === "failed") {
+      throw createError("Failed payment cannot be marked as paid", 409);
+    }
+
+    if (order.stockReservationStatus === "released") {
+      throw createError("Released stock reservation cannot be confirmed", 409);
+    }
+
+    // Payment success confirms the existing stock reservation instead of
+    // changing product stock again.
+    order.paymentStatus = "paid";
+    order.stockReservationStatus = "confirmed";
+    order.razorpayPaymentId = razorpayPaymentId || order.razorpayPaymentId;
+    order.razorpaySignature = razorpaySignature || order.razorpaySignature;
+    order.paidAt = order.paidAt || new Date();
+    order.paymentFailureReason = "";
+
+    await order.save();
+    return order;
+  }
+
+  async markOrderFailedAndReleaseStock({
+    orderId,
+    razorpayOrderId,
+    reason = "Payment failed",
+  }) {
+    const query = this.buildPaymentUpdateQuery({
+      orderId,
+      razorpayOrderId,
+    });
+    const now = new Date();
+
+    // Only the request that flips reserved -> released should return stock.
+    // Repeated failure handling will miss this atomic update and skip release.
+    const orderToRelease = await Order.findOneAndUpdate(
+      {
+        ...query,
+        paymentStatus: { $ne: "paid" },
+        stockReservationStatus: "reserved",
+      },
+      {
+        $set: {
+          paymentStatus: "failed",
+          failedAt: now,
+          paymentFailureReason: reason,
+          status: "cancelled",
+          stockReservationStatus: "released",
+          stockReleasedAt: now,
+        },
+      },
+      { returnDocument: "after" },
+    );
+
+    if (orderToRelease) {
+      await this.releaseStock(orderToRelease.orderItems);
+      return orderToRelease;
+    }
+
+    const order = await Order.findOne(query);
+
+    if (!order) {
+      throw createError("Order not found", 404);
+    }
+
+    if (order.paymentStatus === "paid") {
+      return order;
+    }
+
+    if (
+      order.paymentStatus === "failed" &&
+      order.stockReservationStatus === "released"
+    ) {
+      return order;
+    }
+
+    order.paymentStatus = "failed";
+    order.failedAt = order.failedAt || now;
+    order.paymentFailureReason = reason;
+    order.status = "cancelled";
+    await order.save();
+    return order;
+  }
+
+  async releaseExpiredPaymentReservations() {
+    // Keep abandoned pending payments from holding inventory forever.
+    const expiredOrders = await Order.find({
+      paymentStatus: "pending",
+      stockReservationStatus: "reserved",
+      stockReservationExpiresAt: { $lte: new Date() },
+    });
+
+    let releasedCount = 0;
+
+    for (const order of expiredOrders) {
+      await this.markOrderFailedAndReleaseStock({
+        orderId: order._id,
+        reason: "Payment reservation expired",
+      });
+      releasedCount += 1;
+    }
+
+    return {
+      checkedCount: expiredOrders.length,
+      releasedCount,
+    };
+  }
+
+  async buildCheckoutOrderPayload(orderData) {
     const { orderItems, shippingInfo, shippingMethod = "standard" } = orderData;
 
-    if (!Array.isArray(orderItems) || orderItems.length === 0) {
-      throw createError("Order items are required", 400);
-    }
+    this.validateCheckoutInput({ orderItems, shippingInfo, shippingMethod });
 
-    if (!shippingInfo) {
-      throw createError("Shipping information is required", 400);
-    }
-
-    const nameValidation = validateName(shippingInfo.fullName);
-    if (!nameValidation.valid) {
-      throw createError(nameValidation.error, 400);
-    }
-
-    const emailValidation = validateEmail(shippingInfo.email);
-    if (!emailValidation.valid) {
-      throw createError(emailValidation.error, 400);
-    }
-
-    const shippingMethodValidation = validateShippingMethod(shippingMethod);
-    if (!shippingMethodValidation.valid) {
-      throw createError(shippingMethodValidation.error, 400);
-    }
-
-    // Validate the full checkout address before reserving stock.
-    const phoneValidation = validatePhone(shippingInfo.phone);
-    if (!phoneValidation.valid) {
-      throw createError(phoneValidation.error, 400);
-    }
-
-    const addressLine1Validation = validateAddressLine(
-      shippingInfo.addressLine1,
-    );
-    if (!addressLine1Validation.valid) {
-      throw createError(addressLine1Validation.error, 400);
-    }
-
-    const addressLine2Validation = validateAddressLine(
-      shippingInfo.addressLine2,
-      false,
-    );
-    if (!addressLine2Validation.valid) {
-      throw createError(addressLine2Validation.error, 400);
-    }
-
-    const cityValidation = validateCity(shippingInfo.city);
-    if (!cityValidation.valid) {
-      throw createError(cityValidation.error, 400);
-    }
-
-    const stateValidation = validateState(shippingInfo.state);
-    if (!stateValidation.valid) {
-      throw createError(stateValidation.error, 400);
-    }
-
-    const postalCodeValidation = validatePostalCode(shippingInfo.postalCode);
-    if (!postalCodeValidation.valid) {
-      throw createError(postalCodeValidation.error, 400);
-    }
-
-    const countryValidation = validateCountry(shippingInfo.country);
-    if (!countryValidation.valid) {
-      throw createError(countryValidation.error, 400);
-    }
-
-    // Keep only product id and quantity from the frontend.
+    // Keep only product id and quantity from the frontend; names/prices come
+    // from MongoDB so browser-provided totals cannot be trusted.
     const normalizedOrderItems = orderItems.map((item) => ({
       product: item.product ? item.product.toString() : "",
       quantity: Number(item.quantity),
     }));
 
-    // Validate each cart item before using it.
     for (const item of normalizedOrderItems) {
       if (!item.product) {
         throw createError("Product id is required", 400);
@@ -105,7 +231,6 @@ class OrderService {
       }
     }
 
-    // Merge duplicate products before stock checks.
     const productQuantityMap = new Map();
     for (const item of normalizedOrderItems) {
       productQuantityMap.set(
@@ -114,20 +239,20 @@ class OrderService {
       );
     }
 
+    // Merge duplicate cart rows before stock checks so one product is reserved
+    // with one combined quantity.
     const mergedOrderItems = Array.from(
       productQuantityMap,
       ([product, quantity]) => ({ product, quantity }),
     );
 
-    // Fetch real product data so browser prices cannot be trusted.
     const productIds = mergedOrderItems.map((item) => item.product);
     const products = await Product.find({ _id: { $in: productIds } });
-
     const productMap = new Map(
       products.map((product) => [product._id.toString(), product]),
     );
 
-    // Build order items using database name and price.
+    // Build immutable order item snapshots using current catalog data.
     const safeOrderItems = mergedOrderItems.map((item) => {
       const product = productMap.get(item.product.toString());
 
@@ -150,54 +275,99 @@ class OrderService {
       };
     });
 
-    // Calculate totals on the backend.
-    const calculatedTotalItems = safeOrderItems.reduce(
+    const totalItems = safeOrderItems.reduce(
       (sum, item) => sum + item.quantity,
       0,
     );
-
-    const calculatedSubtotal = safeOrderItems.reduce(
+    const subtotal = safeOrderItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
+    const shippingFee = shippingFees[shippingMethod];
+    const totalPrice = subtotal + shippingFee + platformFee;
 
-    const calculatedShippingFee = shippingFees[shippingMethod];
-    const calculatedPlatformFee = platformFee;
-    const calculatedTotalPrice =
-      calculatedSubtotal + calculatedShippingFee + calculatedPlatformFee;
+    return {
+      orderItems: safeOrderItems,
+      shippingInfo: this.normalizeShippingInfo(shippingInfo),
+      shippingMethod,
+      subtotal,
+      shippingFee,
+      platformFee,
+      totalItems,
+      totalPrice,
+    };
+  }
 
-    const reservedItems = await this.reserveStock(safeOrderItems);
-
-    try {
-      const order = await Order.create({
-        user: userId,
-        orderItems: safeOrderItems,
-        shippingInfo: {
-          fullName: shippingInfo.fullName.trim(),
-          email: shippingInfo.email.trim().toLowerCase(),
-          phone: shippingInfo.phone.trim(),
-          addressLine1: shippingInfo.addressLine1.trim(),
-          addressLine2: shippingInfo.addressLine2
-            ? shippingInfo.addressLine2.trim()
-            : "",
-          city: shippingInfo.city.trim(),
-          state: shippingInfo.state.trim(),
-          postalCode: shippingInfo.postalCode.trim(),
-          country: shippingInfo.country.trim(),
-        },
-        shippingMethod,
-        subtotal: calculatedSubtotal,
-        shippingFee: calculatedShippingFee,
-        platformFee: calculatedPlatformFee,
-        totalItems: calculatedTotalItems,
-        totalPrice: calculatedTotalPrice,
-      });
-
-      return order;
-    } catch (err) {
-      await this.releaseStock(reservedItems);
-      throw err;
+  validateCheckoutInput({ orderItems, shippingInfo, shippingMethod }) {
+    if (!Array.isArray(orderItems) || orderItems.length === 0) {
+      throw createError("Order items are required", 400);
     }
+
+    if (!shippingInfo) {
+      throw createError("Shipping information is required", 400);
+    }
+
+    const validations = [
+      validateName(shippingInfo.fullName),
+      validateEmail(shippingInfo.email),
+      validateShippingMethod(shippingMethod),
+      validatePhone(shippingInfo.phone),
+      validateAddressLine(shippingInfo.addressLine1),
+      validateAddressLine(shippingInfo.addressLine2, false),
+      validateCity(shippingInfo.city),
+      validateState(shippingInfo.state),
+      validatePostalCode(shippingInfo.postalCode),
+      validateCountry(shippingInfo.country),
+    ];
+
+    const failedValidation = validations.find(
+      (validation) => !validation.valid,
+    );
+
+    if (failedValidation) {
+      throw createError(failedValidation.error, 400);
+    }
+  }
+
+  normalizeShippingInfo(shippingInfo) {
+    return {
+      fullName: shippingInfo.fullName.trim(),
+      email: shippingInfo.email.trim().toLowerCase(),
+      phone: shippingInfo.phone.trim(),
+      addressLine1: shippingInfo.addressLine1.trim(),
+      addressLine2: shippingInfo.addressLine2
+        ? shippingInfo.addressLine2.trim()
+        : "",
+      city: shippingInfo.city.trim(),
+      state: shippingInfo.state.trim(),
+      postalCode: shippingInfo.postalCode.trim(),
+      country: shippingInfo.country.trim(),
+    };
+  }
+
+  async findOrderForPaymentUpdate({ orderId, razorpayOrderId }) {
+    const query = this.buildPaymentUpdateQuery({ orderId, razorpayOrderId });
+    const order = await Order.findOne(query);
+
+    if (!order) {
+      throw createError("Order not found", 404);
+    }
+
+    return order;
+  }
+
+  buildPaymentUpdateQuery({ orderId, razorpayOrderId }) {
+    if (!orderId && !razorpayOrderId) {
+      throw createError("Order id or Razorpay order id is required", 400);
+    }
+
+    const query = orderId ? { _id: orderId } : { razorpayOrderId };
+
+    if (orderId && razorpayOrderId) {
+      query.razorpayOrderId = razorpayOrderId;
+    }
+
+    return query;
   }
 
   // Atomically reserve stock so simultaneous checkouts cannot oversell.
@@ -271,16 +441,7 @@ class OrderService {
       throw createError("Status is required", 400);
     }
 
-    const allowedStatuses = [
-      "placed",
-      "processing",
-      "shipped",
-      "delivered",
-      "cancelled",
-    ];
-
-    // Keep status transitions constrained to values supported by the model and admin UI.
-    if (!allowedStatuses.includes(status)) {
+    if (!fulfillmentStatuses.includes(status)) {
       throw createError("Invalid order status", 400);
     }
 
@@ -288,6 +449,15 @@ class OrderService {
 
     if (!order) {
       throw createError("Order not found", 404);
+    }
+
+    if (
+      paidOnlyFulfillmentStatuses.includes(status) &&
+      order.paymentStatus !== "paid"
+    ) {
+      // Admins can view/cancel unpaid orders, but fulfillment starts only
+      // after Razorpay payment is verified.
+      throw createError("Only paid orders can move to fulfillment", 400);
     }
 
     order.status = status;

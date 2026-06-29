@@ -1,0 +1,14 @@
+
+> cartify-client@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.137.1:3000
+- Environments: .env.local
+✓ Ready in 2.7s
+Creating turbopack project { dir: 'D:\\Development\\SSJ\\e-commerce\\client', testMode: true }
+
+ GET / 200 in 2.4s (next.js: 1020ms, application-code: 1410ms)
+ GET / 200 in 439ms (next.js: 23ms, application-code: 416ms)
+ GET / 200 in 221ms (next.js: 21ms, application-code: 200ms)

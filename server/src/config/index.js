@@ -4,11 +4,16 @@ dotenv.config();
 
 const isProduction = process.env.NODE_ENV === "production";
 
+const getTrimmedEnv = (key, fallback = "") =>
+  (process.env[key] || fallback).trim();
+
 const requiredEnvVars = [
   "MONGO_URI",
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
-  ...(isProduction ? ["CLIENT_URL"] : []),
+  ...(isProduction
+    ? ["CLIENT_URL", "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"]
+    : []),
 ];
 
 const missingEnvVars = requiredEnvVars.filter(
@@ -32,6 +37,25 @@ if (accessTokenSecret === refreshTokenSecret) {
   throw new Error("Access and refresh token secrets must be different");
 }
 
+const parsePositiveInteger = (value, fallback, name) => {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${name} must be a positive integer`);
+  }
+
+  return parsed;
+};
+
+const paymentReservationTtlMinutes = parsePositiveInteger(
+  process.env.PAYMENT_RESERVATION_TTL_MINUTES,
+  15,
+  "PAYMENT_RESERVATION_TTL_MINUTES",
+);
+
 const config = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: process.env.PORT || 5000,
@@ -50,6 +74,18 @@ const config = {
 
   geminiApiKey: process.env.GEMINI_API_KEY || "",
   geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+
+  razorpay: {
+    keyId: getTrimmedEnv("RAZORPAY_KEY_ID"),
+    keySecret: getTrimmedEnv("RAZORPAY_KEY_SECRET"),
+    currency: "INR",
+    configured: Boolean(
+      getTrimmedEnv("RAZORPAY_KEY_ID") &&
+        getTrimmedEnv("RAZORPAY_KEY_SECRET"),
+    ),
+  },
+  paymentReservationTtlMinutes,
+  paymentReservationTtlMs: paymentReservationTtlMinutes * 60 * 1000,
 };
 
 module.exports = config;

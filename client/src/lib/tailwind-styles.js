@@ -210,7 +210,8 @@ export const productDetailStyles = {
 export const cartStyles = {
   page,
   shell,
-  empty: `${card} mx-auto mt-12 w-11/12 max-w-xl text-center [&_h1]:text-3xl [&_h1]:font-black`,
+  emptyPage: `${page} flex items-start justify-center px-4 py-14 md:items-center md:py-20`,
+  empty: `${card} grid w-full max-w-lg justify-items-center gap-3 px-6 py-8 text-center md:px-10 md:py-9 [&_h1]:text-3xl [&_h1]:font-black md:[&_h1]:text-4xl`,
   subtle: "text-muted",
   header:
     "mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center [&_h1]:text-3xl [&_h1]:font-black",

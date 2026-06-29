@@ -71,6 +71,7 @@ class AICartBuilderService {
       limit: 50,
     });
 
+    // AI extracts intent only; the actual bundle is chosen from live products.
     const bundle = this.selectBundle(result.products, intent);
 
     return {

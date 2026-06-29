@@ -49,12 +49,7 @@ app.use(cookieParser);
 
 app.use("/api", apiLimiter);
 
-app.use(
-  "/api",
-  createOriginGuard(allowedOrigins, {
-    exemptPaths: ["/api/payments/razorpay/webhook"],
-  }),
-);
+app.use("/api", createOriginGuard(allowedOrigins));
 
 app.use(express.json({ limit: "100kb" }));
 
@@ -73,6 +68,9 @@ app.use("/api/auth", authRoutes);
 const orderRoutes = require("./routes/orderRoutes");
 app.use("/api/orders", orderRoutes);
 
+const paymentRoutes = require("./routes/paymentRoutes");
+app.use("/api/payments", paymentRoutes);
+
 const adminRoutes = require("./routes/adminRoutes");
 app.use("/api/admin", adminRoutes);
 
@@ -83,6 +81,23 @@ app.use(errorHandler);
 
 connectDB();
 initializeSocket(server, allowedOrigins);
+
+const orderService = require("./services/orderService");
+const reservationCleanupIntervalMs = 60 * 1000;
+
+setInterval(async () => {
+  try {
+    const result = await orderService.releaseExpiredPaymentReservations();
+
+    if (result.releasedCount > 0) {
+      console.log(
+        `Released ${result.releasedCount} expired payment reservation(s).`,
+      );
+    }
+  } catch (err) {
+    console.error("Payment reservation cleanup failed:", err.message);
+  }
+}, reservationCleanupIntervalMs);
 
 server.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);

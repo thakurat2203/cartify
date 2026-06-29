@@ -15,7 +15,14 @@ const ORDER_STATUSES = [
   "cancelled",
 ];
 
+const PAID_ONLY_STATUSES = ["processing", "shipped", "delivered"];
 const STATUS_FILTERS = ["all", ...ORDER_STATUSES];
+
+const formatStatus = (status) =>
+  status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown";
+
+const formatDateTime = (value) =>
+  value ? new Date(value).toLocaleString() : "";
 
 const formatShippingMethod = (method) => {
   if (method === "express") {
@@ -177,6 +184,9 @@ export default function AdminOrdersPage() {
             {filteredOrders.map((order) => {
               const draftStatus = statusDrafts[order._id] || order.status;
               const hasPendingStatusChange = draftStatus !== order.status;
+              const blocksFulfillment =
+                order.paymentStatus !== "paid" &&
+                PAID_ONLY_STATUSES.includes(draftStatus);
 
               return (
                 <li key={order._id} className={styles.card}>
@@ -193,13 +203,38 @@ export default function AdminOrdersPage() {
                       Shipping: {formatShippingMethod(order.shippingMethod)}
                     </p>
                     <p className={styles.meta}>
-                      Placed on: {new Date(order.createdAt).toLocaleString()}
+                      Payment: {formatStatus(order.paymentStatus)}
+                    </p>
+                    {order.razorpayOrderId && (
+                      <p className={styles.meta}>
+                        Razorpay order: {order.razorpayOrderId}
+                      </p>
+                    )}
+                    {order.razorpayPaymentId && (
+                      <p className={styles.meta}>
+                        Razorpay payment: {order.razorpayPaymentId}
+                      </p>
+                    )}
+                    {order.paidAt && (
+                      <p className={styles.meta}>
+                        Paid on: {formatDateTime(order.paidAt)}
+                      </p>
+                    )}
+                    {order.failedAt && (
+                      <p className={styles.meta}>
+                        Failed on: {formatDateTime(order.failedAt)}
+                      </p>
+                    )}
+                    <p className={styles.meta}>
+                      Placed on: {formatDateTime(order.createdAt)}
                     </p>
                     <span
                       className={`${styles.badge} ${styles[`status-${order.status}`]}`}
                     >
-                      {order.status.charAt(0).toUpperCase() +
-                        order.status.slice(1)}
+                      {formatStatus(order.status)}
+                    </span>
+                    <span className={styles.badge}>
+                      Payment: {formatStatus(order.paymentStatus)}
                     </span>
                   </div>
 
@@ -232,11 +267,19 @@ export default function AdminOrdersPage() {
                         handleUpdateStatus(order._id, draftStatus)
                       }
                       disabled={
-                        updatingId === order._id || !hasPendingStatusChange
+                        updatingId === order._id ||
+                        !hasPendingStatusChange ||
+                        blocksFulfillment
                       }
                     >
                       {updatingId === order._id ? "Saving..." : "Update Status"}
                     </button>
+
+                    {blocksFulfillment && (
+                      <p className={styles.message}>
+                        Payment must be paid before fulfillment can start.
+                      </p>
+                    )}
                   </div>
                 </li>
               );

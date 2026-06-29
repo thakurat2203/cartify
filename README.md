@@ -1,8 +1,10 @@
-# Cartify - Full Stack E-Commerce Platform
+# Cartify - Full Stack E-Commerce Showcase
 
 [![CI](https://github.com/thakurat2203/cartify/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thakurat2203/cartify/actions/workflows/ci.yml)
 
-Cartify is a MERN-style e-commerce application with a Next.js frontend, an Express API, MongoDB persistence, JWT authentication, role-based admin tools, live order status updates, and a dual-mode AI shopping assistant.
+Cartify is a production-inspired ecommerce demo built with Next.js, Express, MongoDB, cookie-based authentication, Razorpay test-mode checkout, admin workflows, live order updates, and an AI shopping assistant.
+
+The project is designed for portfolio/interview use. Razorpay runs in test mode only; no live money is handled.
 
 ## Live Deployment
 
@@ -12,52 +14,57 @@ Cartify is a MERN-style e-commerce application with a Next.js frontend, an Expre
 | Backend API | Render | https://cartify-backend-lg8z.onrender.com |
 | Health Check | Render | https://cartify-backend-lg8z.onrender.com/health |
 
-Production frontend API proxy target:
+The browser calls same-origin `/api/*` routes. Next.js rewrites those requests to the backend configured by:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-The browser calls the frontend origin at `/api/*`; Next.js rewrites those
-requests to the backend URL above so auth cookies remain first-party.
-
-Production server CORS value:
+The backend allows the deployed frontend origin through:
 
 ```env
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 ```
 
-## Current Features
+## Features
 
 ### Customer
 
-- User registration, login, and session persistence
-- Product catalog with search, category, price filters, sorting, and pagination
-- Dual-mode AI assistant for product recommendations and budget-safe setup bundles
-- Product detail pages with image fallback UI
-- Persistent shopping cart with stock-aware quantity controls
-- Checkout with shipping details, shipping method, and fee summary
-- Order history and individual order tracking
-- Live order status updates through Socket.IO
+- Register, login, logout, session restore, and cookie-based refresh.
+- Product catalog with search, category, price, stock, sorting, and pagination filters.
+- Product details with image fallback UI.
+- Persistent Zustand cart with stock-aware quantity controls.
+- AI shopping assistant for product recommendations and budget-based bundles.
+- Razorpay test-mode checkout with backend signature verification.
+- Customer order history and order detail pages.
+- Live order status updates through Socket.IO.
+
+### Payment Lifecycle
+
+- Backend calculates totals from MongoDB product prices.
+- Checkout reserves stock before opening Razorpay.
+- Backend creates a Razorpay order in INR paise.
+- Frontend verifies payment through `/api/payments/razorpay/verify`.
+- Paid orders confirm the stock reservation.
+- Unpaid pending orders expire after `PAYMENT_RESERVATION_TTL_MINUTES`.
+- Expired pending orders become failed/cancelled and release stock.
+- Admin fulfillment is blocked until payment is paid.
 
 ### Admin
 
-- Role-protected admin dashboard
-- Store summary metrics for products, orders, revenue, active orders, and inventory health
-- Product create, update, delete, stock, category, and image URL management
-- Order list, status filtering, order details, and status updates
-- Low-stock and out-of-stock product visibility
+- Role-protected admin dashboard.
+- Product create, edit, delete, stock, category, and image management.
+- Order list and order detail screens with payment and fulfillment state.
+- Status updates for paid orders.
+- Low-stock and out-of-stock visibility.
 
-### Backend
+### AI Assistant
 
-- JWT authentication and admin authorization middleware
-- Password hashing with bcryptjs
-- Backend validation for auth, products, checkout, and orders
-- Backend order total calculation and price verification
-- Atomic stock reservation before order creation
-- Socket.IO order rooms protected by JWT
-- Helmet security headers, Morgan request logging, API rate limiting, and JSON body size limits
-- Structured API error responses
+- `shopping-assistant` handles simple product/category requests.
+- `cart-builder` handles setup/budget requests.
+- Gemini is used when configured.
+- Local fallback parsing keeps the feature usable without Gemini.
+- Final recommendations always come from live database products.
 
 ## Tech Stack
 
@@ -68,7 +75,7 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 - Zustand
 - Axios
 - Socket.IO Client
-- CSS Modules
+- Tailwind CSS classes
 
 ### Backend
 
@@ -76,93 +83,17 @@ CLIENT_URL=https://cartify-frontend-rouge.vercel.app
 - Express 5
 - MongoDB with Mongoose
 - Socket.IO
-- JSON Web Tokens
+- JSON Web Tokens in HTTP-only cookies
+- Razorpay SDK
 - bcryptjs
 - Helmet, Morgan, express-rate-limit
-- Gemini API integration for the shopping assistant, with a local fallback parser
+- Gemini API with local fallback parsing
 
 ### Deployment
 
 - Frontend: Vercel
 - Backend: Render
-- Database: MongoDB Atlas or any compatible MongoDB connection string
-
-## DevOps Proof
-
-Cartify includes a practical DevOps setup for local development, CI checks, containerized execution, deployment, monitoring, and production readiness.
-
-### Docker
-
-Backend image:
-
-```bash
-docker build -t cartify-server:dev ./server
-docker run --name cartify-server-dev --env-file ./server/.env -p 5000:5000 cartify-server:dev
-```
-
-Frontend image:
-
-```bash
-docker build --build-arg NEXT_PUBLIC_API_BASE_URL=http://host.docker.internal:5000 -t cartify-client:dev ./client
-docker run --name cartify-client-dev -p 3000:3000 cartify-client:dev
-```
-
-### Docker Compose
-
-Run the full local stack with frontend, backend, MongoDB, and seed data:
-
-```bash
-docker compose up --build -d
-```
-
-Check services:
-
-```bash
-docker compose ps
-docker compose logs backend
-docker compose logs client
-docker compose logs seed
-```
-
-Stop services while keeping MongoDB volume data:
-
-```bash
-docker compose down
-```
-
-Remove services and MongoDB volume data:
-
-```bash
-docker compose down -v
-```
-
-### CI/CD
-
-GitHub Actions CI is defined in `.github/workflows/ci.yml` and runs on pushes to `main` and pull requests.
-
-CI checks:
-
-- Server dependency install with `npm ci`
-- Client dependency install with `npm ci`
-- Client lint with `npm run lint`
-- Client production build with `npm run build`
-- Backend Docker image build
-- Frontend Docker image build
-
-CD is handled by Vercel and Render:
-
-- Vercel deploys the `client` frontend.
-- Render deploys the `server` backend.
-- Deployments should be promoted only after CI is green.
-
-### Production Operations
-
-Important production checks:
-
-```bash
-curl -i https://cartify-backend-lg8z.onrender.com/health
-curl -i "https://cartify-backend-lg8z.onrender.com/api/products?limit=1"
-```
+- Database: MongoDB Atlas or compatible MongoDB
 
 ## Project Structure
 
@@ -172,21 +103,22 @@ e-commerce/
 |   |-- src/
 |   |   |-- app/             # App Router pages
 |   |   |-- components/      # Shared UI components
-|   |   |-- context/         # Auth and cart contexts
+|   |   |-- context/         # Auth context
 |   |   |-- store/           # Zustand cart store
-|   |   `-- utils/           # Frontend validation helpers
+|   |   `-- lib/             # API, styles, Razorpay loader
 |   |-- package.json
 |   `-- README.md
 |
 |-- server/                  # Express backend
+|   |-- scripts/             # Seed script
 |   |-- src/
 |   |   |-- config/          # Environment and database config
 |   |   |-- controllers/     # Request handlers
-|   |   |-- middlewares/     # Auth, not found, and error middleware
+|   |   |-- middlewares/     # Auth, origin guard, error handling
 |   |   |-- models/          # Mongoose models
 |   |   |-- routes/          # API routes
 |   |   |-- services/        # Business logic
-|   |   |-- utils/           # Shared backend utilities
+|   |   |-- utils/           # Shared utilities
 |   |   |-- index.js         # Server entry point
 |   |   `-- socket.js        # Socket.IO setup
 |   |-- package.json
@@ -201,8 +133,9 @@ e-commerce/
 
 - Node.js 20.9+
 - npm
-- MongoDB running locally or a MongoDB Atlas connection string
-- Optional: Gemini API key for AI-powered shopping assistant responses
+- MongoDB running locally or MongoDB Atlas
+- Razorpay test key id and secret
+- Optional Gemini API key
 
 ### Install Dependencies
 
@@ -214,22 +147,27 @@ cd ../client
 npm install
 ```
 
-### Environment Variables
+### Server Environment
 
 Create `server/.env` from `server/.env.example`:
 
 ```env
+PORT=5000
 MONGO_URI=mongodb://localhost:27017/ecommerce
 JWT_ACCESS_SECRET=replace_with_a_random_secret_at_least_32_characters
 JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
 JWT_ACCESS_EXPIRE=15m
 JWT_REFRESH_EXPIRE=30d
 NODE_ENV=development
-PORT=5000
 CLIENT_URL=http://localhost:3000
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_test_secret
+PAYMENT_RESERVATION_TTL_MINUTES=1
 ```
+
+### Client Environment
 
 Create `client/.env.local` from `client/.env.example`:
 
@@ -239,14 +177,14 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 
 ### Run Locally
 
-Start the backend:
+Backend:
 
 ```bash
 cd server
 npm start
 ```
 
-Start the frontend in another terminal:
+Frontend:
 
 ```bash
 cd client
@@ -257,26 +195,27 @@ Open http://localhost:3000.
 
 ## API Summary
 
-Production backend API URL:
+Production backend API:
 
 ```text
 https://cartify-backend-lg8z.onrender.com/api
 ```
 
-Local backend API URL:
+Local backend API:
 
 ```text
 http://localhost:5000/api
 ```
 
-The frontend itself calls same-origin `/api/*` routes and proxies them through
-Next.js.
+The frontend calls `/api/*` and lets Next.js proxy to the configured backend.
 
 ### Auth
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
-- `GET /api/auth/me` - authenticated users
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
 
 ### Products
 
@@ -286,7 +225,7 @@ Next.js.
 - `PUT /api/products/:id` - admin only
 - `DELETE /api/products/:id` - admin only
 
-Supported product query parameters:
+Supported query parameters:
 
 | Parameter | Description |
 | --- | --- |
@@ -299,40 +238,28 @@ Supported product query parameters:
 | `page` | Page number, defaults to `1` |
 | `limit` | Products per page, defaults to `8`, max `50` |
 
+### Payments
+
+- `POST /api/payments/razorpay/order` - authenticated users
+- `POST /api/payments/razorpay/verify` - authenticated users
+
 ### Orders
 
-- `POST /api/orders` - authenticated users
 - `GET /api/orders/my-orders` - authenticated users
 - `GET /api/orders/:id` - owner or admin
 - `GET /api/orders` - admin only
 - `PUT /api/orders/:id/status` - admin only
 
+Direct customer order creation is disabled; checkout must go through Razorpay payment APIs.
+
 ### Admin
 
 - `GET /api/admin/dashboard` - admin only
 
-### AI Shopping Assistant And Cart Builder
+### AI
 
 - `POST /api/ai/shopping-assistant`
 - `POST /api/ai/cart-builder`
-
-Simple product request:
-
-```json
-{
-  "message": "mouse"
-}
-```
-
-Bundle request:
-
-```json
-{
-  "message": "Build me an office setup under 5000"
-}
-```
-
-The storefront automatically sends product searches to the shopping-assistant endpoint and setup requests to the cart-builder endpoint. Both use Gemini when configured and fall back to local parsing. Product recommendations come from catalog filters; bundle products are selected deterministically from current in-stock database records so AI cannot invent names, prices, or stock. Both endpoints share a dedicated AI rate limit.
 
 ### Health
 
@@ -344,24 +271,26 @@ Cartify uses Socket.IO for order status notifications.
 
 Client to server:
 
-- `order:join` - join updates for one order with `{ orderId, token }`
+- `order:join` - join updates for one order with `{ orderId }`
 - `order:leave` - leave one order room with `{ orderId }`
 
 Server to client:
 
-- `order:status-updated` - emitted after an admin updates an order status
+- `order:status-updated` - emitted after an admin updates order status
 - `order:error` - emitted when a socket join is rejected
 
-## Deployment Notes
+Socket authentication uses the access cookie during the Socket.IO handshake.
+
+## Deployment
 
 ### Vercel Frontend
 
-Use the `client` directory as the Vercel root.
+Use the `client` directory as the Vercel root:
 
 ```text
 Root Directory: client
-Build Command: npm run build
 Install Command: npm install
+Build Command: npm run build
 Output Directory: .next
 ```
 
@@ -371,12 +300,9 @@ Required environment variable:
 NEXT_PUBLIC_API_BASE_URL=https://cartify-backend-lg8z.onrender.com
 ```
 
-This value is used by `next.config.mjs` as the rewrite destination. Client code
-still calls same-origin `/api/*` paths.
-
 ### Render Backend
 
-Use the `server` directory for the Render service.
+Use the `server` directory as the Render service root:
 
 ```text
 Build Command: npm install
@@ -393,13 +319,26 @@ JWT_REFRESH_SECRET=replace_with_a_different_random_secret_at_least_32_characters
 JWT_ACCESS_EXPIRE=15m
 JWT_REFRESH_EXPIRE=30d
 NODE_ENV=production
-PORT=5000
 CLIENT_URL=https://cartify-frontend-rouge.vercel.app
-GEMINI_API_KEY=your_gemini_api_key_if_using_ai
+GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_test_secret
+PAYMENT_RESERVATION_TTL_MINUTES=1
 ```
 
-`GEMINI_API_KEY` is optional. Without it, both AI modes use local fallback parsing.
+Render usually provides `PORT`; set it manually only if your service requires it.
+
+## CI
+
+GitHub Actions runs:
+
+- Server dependency install with `npm ci`
+- Client dependency install with `npm ci`
+- Client lint with `npm run lint`
+- Client production build with `npm run build`
+- Backend Docker image build
+- Frontend Docker image build
 
 ## Scripts
 
@@ -419,4 +358,4 @@ npm start
 npm run seed
 ```
 
-Last updated: June 25, 2026
+Last updated: June 30, 2026

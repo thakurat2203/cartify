@@ -1,6 +1,5 @@
 const express = require("express");
 const {
-  createOrder,
   getMyOrders,
   getOrderById,
   getAllOrders,
@@ -11,7 +10,6 @@ const { protect, authorizeRoles } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 // User order routes
-router.post("/", protect, createOrder);
 router.get("/my-orders", protect, getMyOrders);
 router.get("/:id", protect, getOrderById);
 

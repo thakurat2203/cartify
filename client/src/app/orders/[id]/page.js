@@ -19,6 +19,9 @@ const formatShippingMethod = (method) => {
 const formatStatus = (status) =>
   status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
 
+const formatDateTime = (value) =>
+  value ? new Date(value).toLocaleString() : "";
+
 export default function OrderDetailsPage({ params }) {
   const { id } = use(params);
   const { isAuthenticated, authLoading } = useAuth();
@@ -154,18 +157,59 @@ export default function OrderDetailsPage({ params }) {
                 <span className={styles.value}>{order._id}</span>
               </p>
               <p className={styles.row}>
-                <strong className={styles.label}>Status:</strong>
+                <strong className={styles.label}>Fulfillment status:</strong>
                 <span className={`${styles.value} ${styles.statusBadge}`}>
-                  {order.status}
+                  {formatStatus(order.status)}
                 </span>
               </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Payment status:</strong>
+                <span className={`${styles.value} ${styles.statusBadge}`}>
+                  {formatStatus(order.paymentStatus)}
+                </span>
+              </p>
+              {order.paidAt && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Paid on:</strong>
+                  <span className={styles.value}>
+                    {formatDateTime(order.paidAt)}
+                  </span>
+                </p>
+              )}
+              {order.failedAt && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Failed on:</strong>
+                  <span className={styles.value}>
+                    {formatDateTime(order.failedAt)}
+                  </span>
+                </p>
+              )}
+              {order.paymentFailureReason && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Payment issue:</strong>
+                  <span className={styles.value}>
+                    {order.paymentFailureReason}
+                  </span>
+                </p>
+              )}
+              {order.paymentStatus === "pending" &&
+                order.stockReservationExpiresAt && (
+                  <p className={styles.row}>
+                    <strong className={styles.label}>
+                      Payment expires:
+                    </strong>
+                    <span className={styles.value}>
+                      {formatDateTime(order.stockReservationExpiresAt)}
+                    </span>
+                  </p>
+                )}
               {liveMessage && (
                 <p className={styles.liveMessage}>{liveMessage}</p>
               )}
               <p className={styles.row}>
                 <strong className={styles.label}>Placed on:</strong>
                 <span className={styles.value}>
-                  {new Date(order.createdAt).toLocaleString()}
+                  {formatDateTime(order.createdAt)}
                 </span>
               </p>
             </div>

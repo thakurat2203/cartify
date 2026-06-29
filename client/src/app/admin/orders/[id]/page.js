@@ -15,8 +15,13 @@ const ORDER_STATUSES = [
   "cancelled",
 ];
 
+const PAID_ONLY_STATUSES = ["processing", "shipped", "delivered"];
+
 const formatStatus = (status) =>
   status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
+
+const formatDateTime = (value) =>
+  value ? new Date(value).toLocaleString() : "";
 
 const formatShippingMethod = (method) => {
   if (method === "express") {
@@ -75,13 +80,22 @@ export default function AdminOrderDetailsPage({ params }) {
   };
 
   const handleStatusUpdate = async () => {
+    const nextStatus = statusDraft || order.status;
+    const blocksFulfillment =
+      order.paymentStatus !== "paid" && PAID_ONLY_STATUSES.includes(nextStatus);
+
+    if (blocksFulfillment) {
+      setMessage("Payment must be paid before fulfillment can start.");
+      return;
+    }
+
     try {
       setSaving(true);
       setMessage("");
 
       const response = await api.put(
         `/api/orders/${id}/status`,
-        { status: statusDraft || order.status },
+        { status: nextStatus },
       );
 
       setOrder(response.data.order);
@@ -122,6 +136,14 @@ export default function AdminOrderDetailsPage({ params }) {
 
         {order && (
           <div className={styles.card}>
+            {(() => {
+              const selectedStatus = statusDraft || order.status;
+              const blocksFulfillment =
+                order.paymentStatus !== "paid" &&
+                PAID_ONLY_STATUSES.includes(selectedStatus);
+
+              return (
+                <>
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Order Info</h2>
               <p className={styles.row}>
@@ -129,7 +151,7 @@ export default function AdminOrderDetailsPage({ params }) {
                 <span className={styles.value}>{order._id}</span>
               </p>
               <p className={styles.row}>
-                <strong className={styles.label}>Status:</strong>
+                <strong className={styles.label}>Fulfillment status:</strong>
                 <span
                   className={`${styles.badge} ${styles[`status-${order.status}`]}`}
                 >
@@ -139,9 +161,87 @@ export default function AdminOrderDetailsPage({ params }) {
               <p className={styles.row}>
                 <strong className={styles.label}>Placed on:</strong>
                 <span className={styles.value}>
-                  {new Date(order.createdAt).toLocaleString()}
+                  {formatDateTime(order.createdAt)}
                 </span>
               </p>
+            </div>
+
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Payment</h2>
+              <p className={styles.row}>
+                <strong className={styles.label}>Payment status:</strong>
+                <span className={styles.value}>
+                  {formatStatus(order.paymentStatus)}
+                </span>
+              </p>
+              <p className={styles.row}>
+                <strong className={styles.label}>Reservation:</strong>
+                <span className={styles.value}>
+                  {formatStatus(order.stockReservationStatus)}
+                </span>
+              </p>
+              {order.razorpayOrderId && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Razorpay order:</strong>
+                  <span className={styles.value}>{order.razorpayOrderId}</span>
+                </p>
+              )}
+              {order.razorpayPaymentId && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Razorpay payment:</strong>
+                  <span className={styles.value}>
+                    {order.razorpayPaymentId}
+                  </span>
+                </p>
+              )}
+              {order.paidAt && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Paid on:</strong>
+                  <span className={styles.value}>
+                    {formatDateTime(order.paidAt)}
+                  </span>
+                </p>
+              )}
+              {order.failedAt && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Failed on:</strong>
+                  <span className={styles.value}>
+                    {formatDateTime(order.failedAt)}
+                  </span>
+                </p>
+              )}
+              {order.paymentFailureReason && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Failure reason:</strong>
+                  <span className={styles.value}>
+                    {order.paymentFailureReason}
+                  </span>
+                </p>
+              )}
+              {order.stockReservedAt && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Reserved on:</strong>
+                  <span className={styles.value}>
+                    {formatDateTime(order.stockReservedAt)}
+                  </span>
+                </p>
+              )}
+              {order.stockReservationExpiresAt && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Reservation expires:</strong>
+                  <span className={styles.value}>
+                    {formatDateTime(order.stockReservationExpiresAt)}
+                  </span>
+                </p>
+              )}
+              {order.stockReleasedAt && (
+                <p className={styles.row}>
+                  <strong className={styles.label}>Stock released on:</strong>
+                  <span className={styles.value}>
+                    {formatDateTime(order.stockReleasedAt)}
+                  </span>
+                </p>
+              )}
             </div>
 
             <div className={styles.section}>
@@ -254,13 +354,23 @@ export default function AdminOrderDetailsPage({ params }) {
                   className={styles.submitButton}
                   onClick={handleStatusUpdate}
                   disabled={
-                    saving || (statusDraft || order.status) === order.status
+                    saving ||
+                    selectedStatus === order.status ||
+                    blocksFulfillment
                   }
                 >
                   {saving ? "Saving..." : "Update Status"}
                 </button>
               </div>
+              {blocksFulfillment && (
+                <p className={styles.message}>
+                  Payment must be paid before fulfillment can start.
+                </p>
+              )}
             </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </div>

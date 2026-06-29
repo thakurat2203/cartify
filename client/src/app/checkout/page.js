@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import { loadRazorpayCheckout } from "@/lib/razorpay";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -184,8 +185,8 @@ export default function CheckoutPage() {
         quantity: item.quantity,
       }));
 
-      const response = await api.post(
-        "/api/orders",
+      const paymentOrderResponse = await api.post(
+        "/api/payments/razorpay/order",
         {
           orderItems,
           shippingInfo: {
@@ -203,21 +204,68 @@ export default function CheckoutPage() {
         },
       );
 
-      const createdOrder = response.data.order;
+      const { checkout } = paymentOrderResponse.data;
+      const razorpayLoaded = await loadRazorpayCheckout();
 
-      clearCart();
-      toast.success("Order placed successfully");
-      setForm(initialFormState);
-      setFormTouched(false);
-      setFormPrefilled(false);
-      setShippingMethod("standard");
+      if (!razorpayLoaded) {
+        setMessage("Could not load Razorpay Checkout. Please try again.");
+        setSubmitting(false);
+        return;
+      }
 
-      router.push(`/orders/${createdOrder._id}`);
+      const razorpay = new window.Razorpay({
+        key: checkout.key,
+        amount: checkout.amount,
+        currency: checkout.currency,
+        order_id: checkout.orderId,
+        name: checkout.name,
+        description: checkout.description,
+        prefill: checkout.prefill,
+        theme: checkout.theme,
+        handler: async (razorpayResponse) => {
+          try {
+            setMessage("Verifying payment...");
+
+            const verifyResponse = await api.post(
+              "/api/payments/razorpay/verify",
+              razorpayResponse,
+            );
+            const paidOrder = verifyResponse.data.order;
+
+            clearCart();
+            toast.success("Payment verified successfully");
+            setForm(initialFormState);
+            setFormTouched(false);
+            setFormPrefilled(false);
+            setShippingMethod("standard");
+
+            router.push(`/orders/${paidOrder._id}`);
+          } catch (verifyErr) {
+            const apiMessage =
+              verifyErr.response?.data?.message ||
+              verifyErr.message ||
+              "Payment verification failed";
+            setMessage(apiMessage);
+          } finally {
+            setSubmitting(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setMessage(
+              "Payment was not completed. Your order is pending until payment succeeds or the reservation expires.",
+            );
+            setSubmitting(false);
+          },
+        },
+      });
+
+      setMessage("Complete payment in the Razorpay window.");
+      razorpay.open();
     } catch (err) {
       const apiMessage =
-        err.response?.data?.message || err.message || "Failed to place order";
+        err.response?.data?.message || err.message || "Failed to start payment";
       setMessage(apiMessage);
-    } finally {
       setSubmitting(false);
     }
   };
@@ -358,7 +406,7 @@ export default function CheckoutPage() {
             className={styles.submitButton}
             disabled={submitting || Boolean(stockIssue)}
           >
-            {submitting ? "Placing order..." : "Place order"}
+            {submitting ? "Starting payment..." : "Pay with Razorpay"}
           </button>
 
           {stockIssue && (

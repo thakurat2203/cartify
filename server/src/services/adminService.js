@@ -30,7 +30,7 @@ class AdminService {
       Product.countDocuments(),
       Order.countDocuments(),
 
-      // We do not have payments yet, so cancelled orders are excluded from revenue.
+      // Failed payment expiries become cancelled, so they must not count as revenue.
       Order.aggregate([
         {
           $match: {

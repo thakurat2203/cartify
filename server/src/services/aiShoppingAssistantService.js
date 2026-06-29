@@ -109,6 +109,7 @@ class AIShoppingAssistantService {
       }
     }
 
+    // Keep the assistant usable when Gemini is missing or temporarily fails.
     return {
       filters: this.parseFallbackFilters(message),
       source: "fallback",

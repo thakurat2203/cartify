@@ -133,10 +133,64 @@ const orderSchema = new mongoose.Schema(
       enum: ["placed", "processing", "shipped", "delivered", "cancelled"],
       default: "placed",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "paid",
+      index: true,
+    },
+    razorpayOrderId: {
+      type: String,
+      trim: true,
+    },
+    razorpayPaymentId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    razorpaySignature: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    paidAt: {
+      type: Date,
+    },
+    failedAt: {
+      type: Date,
+    },
+    paymentFailureReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    stockReservationStatus: {
+      type: String,
+      enum: ["reserved", "confirmed", "released"],
+      default: "confirmed",
+      index: true,
+    },
+    stockReservedAt: {
+      type: Date,
+    },
+    stockReservationExpiresAt: {
+      type: Date,
+      index: true,
+    },
+    stockReleasedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+orderSchema.index({ razorpayOrderId: 1 }, { unique: true, sparse: true });
+orderSchema.index({
+  paymentStatus: 1,
+  stockReservationStatus: 1,
+  stockReservationExpiresAt: 1,
+});
 
 module.exports = mongoose.model("Order", orderSchema);

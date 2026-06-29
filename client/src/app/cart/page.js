@@ -31,7 +31,7 @@ export default function CartPage() {
 
   if (authLoading || !isAuthenticated || !cartReady) {
     return (
-      <div className={styles.page}>
+      <div className={styles.emptyPage}>
         <div className={styles.empty}>
           <h1>Your cart</h1>
           <p className={styles.subtle}>Loading cart...</p>
@@ -42,7 +42,7 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div className={styles.page}>
+      <div className={styles.emptyPage}>
         <div className={styles.empty}>
           <h1>Your cart</h1>
           <p className={styles.subtle}>Your cart is empty right now.</p>

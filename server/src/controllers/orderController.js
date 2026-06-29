@@ -1,31 +1,6 @@
 const orderService = require("../services/orderService");
 const { emitOrderStatusUpdated } = require("../socket");
 
-// Order controllers keep route handling thin while services enforce checkout rules.
-const createOrder = async (req, res, next) => {
-  try {
-    const { orderItems, shippingInfo, shippingMethod } = req.body;
-    const userId = req.user.userId;
-
-    // Keep pricing decisions in the service by passing the selected method through.
-    const order = await orderService.createOrder(
-      {
-        orderItems,
-        shippingInfo,
-        shippingMethod,
-      },
-      userId,
-    );
-
-    res.status(201).json({
-      message: "Order created successfully",
-      order,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
 const getMyOrders = async (req, res, next) => {
   try {
     const userId = req.user.userId;
@@ -76,7 +51,6 @@ const updateOrderStatus = async (req, res, next) => {
 };
 
 module.exports = {
-  createOrder,
   getMyOrders,
   getOrderById,
   getAllOrders,
